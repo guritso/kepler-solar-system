@@ -27,6 +27,7 @@
         ctx.strokeStyle = "gray";
         ctx.lineWidth = 1 / scale;
 
+        // temporary grid
         const gridSize = 24;
         const canvasSize = 300000;
 
@@ -36,6 +37,7 @@
             ctx.lineTo(x, canvasSize / 2);
             ctx.stroke();
         }
+
         for (let y = -canvasSize / 2; y < canvasSize / 2; y += gridSize) {
             ctx.beginPath();
             ctx.moveTo(-canvasSize / 2, y);
@@ -43,7 +45,7 @@
             ctx.stroke();
         }
 
-        // sun
+        // temporary sun
         ctx.fillStyle = "yellow";
         ctx.beginPath();
         ctx.arc(0, 0, 5, 0, Math.PI * 2);

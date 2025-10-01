@@ -1,22 +1,41 @@
 <script lang="ts">
+	import { coordinates } from "$lib/stores";
+
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D;
 
     
-    $effect(() => {
-        canvas.height = window.innerHeight;
-        canvas.width = window.innerWidth;
-    
-        ctx = canvas.getContext("2d")!;
-        draw();
-    });
-
-    let offsetX = 0;
-    let offsetY = 0;
-    let scale = 1;
+    let offsetX = $state(0);
+    let offsetY = $state(0);
+    let scale = $state(1);
+    let gridSize = $state(60);
     let isDragging = false;
     let startX: number, startY: number;
     
+    let mouseX = $state(0);
+    let mouseY = $state(0);
+    
+    $effect(() => {
+        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
+
+        ctx = canvas.getContext("2d")!;
+
+        console.table({
+        offsetX,
+            offsetY,
+            scale,
+            gridSize,
+            isDragging,
+            startX,
+            startY,
+            mouseX, 
+            mouseY,
+        });
+    
+        draw();
+    });
+
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -28,7 +47,6 @@
         ctx.lineWidth = 1 / scale;
 
         // temporary grid
-        const gridSize = 24;
         const canvasSize = 300000;
 
         for (let x = -canvasSize / 2; x < canvasSize / 2; x += gridSize) {
@@ -58,7 +76,7 @@
     function mousedown (event: MouseEvent) {
         isDragging = true;
         startX = event.clientX - offsetX;
-        startY = event.clientY - offsetY;
+        startY = event.clientY - offsetY;   
     }
 
     function mouseup () {
@@ -70,11 +88,15 @@
     }
 
     function mousemove (event: MouseEvent) {
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+
         if (isDragging) {
             offsetX = event.clientX - startX;
             offsetY = event.clientY - startY;
-            draw();
         }
+
+        draw();
     }
 
     const zoomMax = 10;
@@ -106,13 +128,38 @@
         canvas.width = window.innerWidth;
         draw();
     }
+
+    let cursorX = $state(0);
+    let cursorY = $state(0);
+    let centerX = $state(0);
+    let centerY = $state(0);
+    // coordinates of the cursor and center
+    function pointermove (event: PointerEvent) {
+        cursorX = (event.clientX - canvas.width / 2 - offsetX) / (scale * gridSize);
+        cursorY = (event.clientY - canvas.height / 2 - offsetY) / (scale * gridSize);
+        centerX = -offsetX / (scale * gridSize);
+        centerY = -offsetY / (scale * gridSize);
+        
+        draw();
+    }
+
+    $effect(() => {
+        $coordinates = {
+            x: centerX,
+            y: centerY,
+            z: scale,
+            mx: cursorX,
+            my: cursorY
+        }
+    });
 </script>
 
-<canvas class="border border-gray-600" bind:this={canvas}
+<canvas class="absolute inset-0" bind:this={canvas}
     onmousedown={mousedown}
     onmouseup={mouseup}
     onmousemove={mousemove}
     onmouseleave={mouseleave}
     onwheel={wheel}
     onresize={resize}
+    onpointermove={pointermove}
 ></canvas>

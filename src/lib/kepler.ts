@@ -26,15 +26,12 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	const mu = 0.01720209895 ** 2;
 
 	const t = (now - elements.epoch) / 86400000; // days since epoch
-
 	// Mean motion (rad/day)
 	const n = Math.sqrt(mu / Math.pow(elements.a, 3));
-
 	// Mean anomaly at time now (radians)
 	let M = (elements.M * Math.PI) / 180 + n * t;
 	// Normalize M to [-PI, PI]
 	M = ((M + Math.PI) % (2 * Math.PI)) - Math.PI;
-
 	// Solve Kepler's equation: M = E - e*sin(E) for E
 	const e = elements.e;
 	let E = M; // initial guess
@@ -43,7 +40,6 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	} else {
 		E = Math.PI;
 	}
-
 	// Newton-Raphson
 	for (let iter = 0; iter < 50; iter++) {
 		const f = E - e * Math.sin(E) - M;
@@ -52,23 +48,19 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 		E -= delta;
 		if (Math.abs(delta) < 1e-12) break;
 	}
-
 	// True anomaly components and distance
 	const cosE = Math.cos(E);
 	const sinE = Math.sin(E);
 
 	const a = elements.a;
 	const r = a * (1 - e * cosE);
-
 	// position in orbital plane (PQW frame)
 	const x_orb = a * (cosE - e);
 	const y_orb = a * Math.sqrt(Math.max(0, 1 - e * e)) * sinE;
-
 	// velocity in orbital plane (AU/day)
 	const factor = Math.sqrt(mu * a) / r;
 	const vx_orb = -factor * sinE;
 	const vy_orb = factor * Math.sqrt(Math.max(0, 1 - e * e)) * cosE;
-
 	// rotation to inertial frame using Ω, i, ω (all converted to radians)
 	const Omega = (elements.Ω * Math.PI) / 180;
 	const inc = (elements.i * Math.PI) / 180;
@@ -80,7 +72,6 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	const sini = Math.sin(inc);
 	const cosw = Math.cos(omega);
 	const sinw = Math.sin(omega);
-
 	// rotation matrix components
 	const R11 = cosO * cosw - sinO * sinw * cosi;
 	const R12 = -cosO * sinw - sinO * cosw * cosi;

@@ -132,7 +132,6 @@
 		});
 		ctx.restore();
 	}
-
 	// pan events
 	function pointerdown(event: PointerEvent) {
 		event.preventDefault();
@@ -171,7 +170,6 @@
 
 	const closestZoom = 1000;
 	const farthestZoom = 0.001;
-
 	// zoom events
 	function wheel(event: WheelEvent) {
 		event.preventDefault();
@@ -191,14 +189,12 @@
 
 		draw();
 	}
-
 	// resize canvas
 	function resize() {
 		canvas.height = window.innerHeight;
 		canvas.width = window.innerWidth;
 		draw();
 	}
-
 	// coordinates of the cursor and center
 	function pointermove(event: PointerEvent) {
 		cursorX = (event.clientX - canvas.width / 2 - offsetX) / (scale * gridSize);

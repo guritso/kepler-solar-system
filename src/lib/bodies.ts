@@ -15,7 +15,6 @@ export interface Body {
 
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
-
 // Simulation scale: existing code places Earth at x ~ 215 for a = 1 AU.
 // We'll map 1 AU -> 215 simulation units. Velocities from kepler are in AU/day,
 // while the simulation integrates using seconds, so convert AU/day -> AU/sec by /86400,
@@ -32,11 +31,9 @@ function fromOrbital(
 ) {
 	const now = Date.now();
 	const state = keplerToCartesian(elements, now);
-
 	// positions: AU -> sim units
 	const x = state.x * AU_TO_SIM;
 	const y = state.y * AU_TO_SIM;
-
 	// velocities: AU/day -> AU/sec -> sim units/sec
 	const vx = (state.vx / DAY_TO_SEC) * AU_TO_SIM;
 	const vy = (state.vy / DAY_TO_SEC) * AU_TO_SIM;
@@ -68,7 +65,6 @@ const sun: Body = {
 	},
 	trail: []
 };
-
 // Basic orbital elements (simplified, epoch arbitrary = Date.now()) in units expected by keplerToCartesian
 // Source: approximate semi-major axes and eccentricities for illustration
 const mercuryEl: OrbitalElements = {
@@ -116,7 +112,6 @@ const jupiterEl: OrbitalElements = {
 	M: 82.23624259872942,
 	epoch: 1759536000000
 };
-
 const saturnEl: OrbitalElements = {
 	a: 9.537827257799261,
 	e: 0.05454059430016105,

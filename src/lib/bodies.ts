@@ -1,166 +1,214 @@
 export interface Body {
-    name: string;
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    mass: number;
-    radius: number;
-    gradient: {
-        one: string;
-        two: string;
-    };
-    trail: { x: number; y: number }[];
+	name: string;
+	x: number;
+	y: number;
+	vx: number;
+	vy: number;
+	mass: number;
+	radius: number;
+	gradient: {
+		one: string;
+		two: string;
+	};
+	trail: { x: number; y: number }[];
+}
+
+import { keplerToCartesian } from './kepler';
+import type { OrbitalElements } from './kepler';
+
+// Simulation scale: existing code places Earth at x ~ 215 for a = 1 AU.
+// We'll map 1 AU -> 215 simulation units. Velocities from kepler are in AU/day,
+// while the simulation integrates using seconds, so convert AU/day -> AU/sec by /86400,
+// then to simulation units.
+const AU_TO_SIM = 215; // 1 AU == 215 simulation units (empirical from bodies.ts)
+const DAY_TO_SEC = 86400;
+
+function fromOrbital(
+	name: string,
+	elements: OrbitalElements,
+	mass: number,
+	radiusScale: number,
+	gradient: { one: string; two: string }
+) {
+	const now = Date.now();
+	const state = keplerToCartesian(elements, now);
+
+	// positions: AU -> sim units
+	const x = state.x * AU_TO_SIM;
+	const y = state.y * AU_TO_SIM;
+
+	// velocities: AU/day -> AU/sec -> sim units/sec
+	const vx = (state.vx / DAY_TO_SEC) * AU_TO_SIM;
+	const vy = (state.vy / DAY_TO_SEC) * AU_TO_SIM;
+
+	return {
+		name,
+		radius: sun.radius * radiusScale,
+		x,
+		y,
+		vx,
+		vy,
+		mass,
+		gradient,
+		trail: [] as { x: number; y: number }[]
+	};
 }
 
 const sun: Body = {
-    name: 'Sun',
-    radius: 20,
-    x: 0,
-    y: 0,
-    vx: 0,
-    vy: 0,
-    mass: 1.989e30,
-    gradient: {
-        one: 'rgb(255, 252, 52)',
-        two: 'rgb(236, 88, 20)'
-    },
-    trail: [],
+	name: 'Sun',
+	radius: 20,
+	x: 0,
+	y: 0,
+	vx: 0,
+	vy: 0,
+	mass: 1.989e30,
+	gradient: {
+		one: 'rgb(255, 252, 52)',
+		two: 'rgb(236, 88, 20)'
+	},
+	trail: []
 };
 
-const mercury: Body = {
-    name: 'Mercury',
-    radius: sun.radius * 0.003506,
-    x: 83,
-    y: 0,
-    vx: 0,
-    vy: 6.88e-5,
-    mass: 3.3014e23,
-    gradient: {
-        one: 'rgb(200, 200, 200)',
-        two: 'rgb(100, 100, 100)'
-    },
-    trail: [],
+// Basic orbital elements (simplified, epoch arbitrary = Date.now()) in units expected by keplerToCartesian
+// Source: approximate semi-major axes and eccentricities for illustration
+const mercuryEl: OrbitalElements = {
+	a: 0.3963303568552592,
+	e: 0.195146800949858,
+	i: 6.998467562564008,
+	Ω: 48.54860929512073,
+	ω: 29.90600153654426,
+	M: 152.5050447087461,
+	epoch: 1759536000000
+};
+const venusEl: OrbitalElements = {
+	a: 0.7193075628881022,
+	e: 0.00961301922234237,
+	i: 3.395190616929889,
+	Ω: 76.61547876637461,
+	ω: 346.1809908562251,
+	M: 70.73681720932568,
+	epoch: 1759536000000
+};
+const earthEl: OrbitalElements = {
+	a: 0.9884778595229721,
+	e: 0.0224665980676975,
+	i: 0.009361834796841753,
+	Ω: 242.5714748746163,
+	ω: 238.093817256785,
+	M: 252.1662094875961,
+	epoch: 1759536000000
+};
+const marsEl: OrbitalElements = {
+	a: 1.5361808446362526,
+	e: 0.09327957122076079,
+	i: 1.846149199958463,
+	Ω: 49.67412197237504,
+	ω: 284.0761205312491,
+	M: 271.5705002287118,
+	epoch: 1759536000000
+};
+const jupiterEl: OrbitalElements = {
+	a: 5.196872446649367,
+	e: 0.04902661375752699,
+	i: 1.303775355536004,
+	Ω: 100.4997221050677,
+	ω: 273.2754318441118,
+	M: 82.23624259872942,
+	epoch: 1759536000000
 };
 
-const venus: Body = {
-    name: 'Venus',
-    radius: sun.radius * 0.008699,
-    x: 156,
-    y: 0,
-    vx: 0,
-    vy: 5.03e-5,
-    mass: 4.8675e24,
-    gradient: {
-        one: 'rgb(255, 200, 100)',
-        two: 'rgb(200, 100, 0)'
-    },
-    trail: [],
+const saturnEl: OrbitalElements = {
+	a: 9.537827257799261,
+	e: 0.05454059430016105,
+	i: 2.488808873212828,
+	Ω: 113.644119191983,
+	ω: 338.5479951631343,
+	M: 272.6176161051636,
+	epoch: 1759536000000
+};
+const uranusEl: OrbitalElements = {
+	a: 19.188180030037476,
+	e: 0.04726029813008705,
+	i: 0.7726304037113545,
+	Ω: 73.99333322935934,
+	ω: 97.11194454391001,
+	M: 252.4895802486794,
+	epoch: 1759536000000
+};
+const neptuneEl: OrbitalElements = {
+	a: 30.06973093117018,
+	e: 0.008593397795593868,
+	i: 1.775164447238822,
+	Ω: 131.9635756395051,
+	ω: 272.6698679970442,
+	M: 316.5089329576374,
+	epoch: 1759536000000
 };
 
-const earth: Body = {
-    name: 'Earth',
-    radius: sun.radius * 0.009158,
-    x: 215,
-    y: 0,
-    vx: 0,
-    vy: 4.28e-5,
-    mass: 5.9723e24,
-    gradient: {
-        one: 'rgb(0, 121, 202)',
-        two: 'rgba(21, 204, 76, 0.57)'
-    },
-    trail: [],
-};
+const mercury: Body = fromOrbital('Mercury', mercuryEl, 3.3014e23, 0.003506, {
+	one: 'rgb(200, 200, 200)',
+	two: 'rgb(100, 100, 100)'
+});
 
-const mars: Body = {
-    name: 'Mars',
-    radius: sun.radius * 0.004872,
-    x: 328,
-    y: 0,
-    vx: 0,
-    vy: 3.47e-5,
-    mass: 6.4171e23,
-    gradient: {
-        one: 'rgb(255, 100, 50)',
-        two: 'rgb(150, 50, 0)'
-    },
-    trail: [],
-};
+const venus: Body = fromOrbital('Venus', venusEl, 4.8675e24, 0.008699, {
+	one: 'rgb(255, 200, 100)',
+	two: 'rgb(200, 100, 0)'
+});
 
-const jupiter: Body = {
-    name: 'Jupiter',
-    radius: sun.radius * 0.100476,
-    x: 1119,
-    y: 0,
-    vx: 0,
-    vy: 1.88e-5,
-    mass: 1.8982e27,
-    gradient: {
-        one: 'rgb(201, 230, 71)',
-        two: 'rgba(255, 230, 0, 0.57)'
-    },
-    trail: [],
-};
+const earth: Body = fromOrbital('Earth', earthEl, 5.9723e24, 0.009158, {
+	one: 'rgb(0, 121, 202)',
+	two: 'rgba(21, 204, 76, 0.57)'
+});
 
-const saturn: Body = {
-    name: 'Saturn',
-    radius: sun.radius * 0.083703,
-    x: 2050,
-    y: 0,
-    vx: 0,
-    vy: 1.39e-5,
-    mass: 5.6834e26,
-    gradient: {
-        one: 'rgb(250, 200, 100)',
-        two: 'rgb(200, 150, 50)'
-    },
-    trail: [],
-};
+const mars: Body = fromOrbital('Mars', marsEl, 6.4171e23, 0.004872, {
+	one: 'rgb(255, 100, 50)',
+	two: 'rgb(150, 50, 0)'
+});
 
-const uranus: Body = {
-    name: 'Uranus',
-    radius: sun.radius * 0.036456,
-    x: 4130,
-    y: 0,
-    vx: 0,
-    vy: 9.79e-6,
-    mass: 8.681e25,
-    gradient: {
-        one: 'rgb(100, 200, 255)',
-        two: 'rgb(50, 100, 150)'
-    },
-    trail: [],
-};
+const jupiter: Body = fromOrbital('Jupiter', jupiterEl, 1.8982e27, 0.100476, {
+	one: 'rgb(201, 230, 71)',
+	two: 'rgba(255, 230, 0, 0.57)'
+});
 
-const neptune: Body = {
-    name: 'Neptune',
-    radius: sun.radius * 0.035396,
-    x: 6467,
-    y: 0,
-    vx: 0,
-    vy: 7.80e-6,
-    mass: 1.0241e26,
-    gradient: {
-        one: 'rgb(50, 100, 255)',
-        two: 'rgb(0, 50, 150)'
-    },
-    trail: [],
-};
+const saturn: Body = fromOrbital('Saturn', saturnEl, 5.6834e26, 0.083703, {
+	one: 'rgb(250, 200, 100)',
+	two: 'rgb(200, 150, 50)'
+});
+
+const uranus: Body = fromOrbital('Uranus', uranusEl, 8.681e25, 0.036456, {
+	one: 'rgb(100, 200, 255)',
+	two: 'rgb(50, 100, 150)'
+});
+
+const neptune: Body = fromOrbital('Neptune', neptuneEl, 1.0241e26, 0.035396, {
+	one: 'rgb(50, 100, 255)',
+	two: 'rgb(0, 50, 150)'
+});
 
 const atlas: Body = {
-    name: '3I/ATLAS',
-    radius: sun.radius * 0.0005, // Exaggerated for visibility; real ~2e-6
-    x: -260.8,
-    y: -412.8,
-    vx: -3.24e-5,
-    vy: 8.91e-5,
-    mass: 1e13, // Approximate comet mass
-    gradient: {
-        one: 'rgb(200, 200, 255)',
-        two: 'rgba(100, 100, 200, 0.6)'
-    },
-    trail: [],
+	name: '3I/ATLAS',
+	radius: sun.radius * 0.0005, // Exaggerated for visibility; real ~2e-6
+	x: -260.8,
+	y: -412.8,
+	vx: -3.24e-5,
+	vy: 8.91e-5,
+	mass: 1e13, // Approximate comet mass
+	gradient: {
+		one: 'rgb(200, 200, 255)',
+		two: 'rgba(100, 100, 200, 0.6)'
+	},
+	trail: []
 };
 
-export const bodies: Body[] = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, atlas];
+export const bodies: Body[] = [
+	sun,
+	mercury,
+	venus,
+	earth,
+	mars,
+	jupiter,
+	saturn,
+	uranus,
+	neptune,
+	atlas
+];

@@ -1,6 +1,8 @@
 <script>
 	import Canvas from '$lib/components/Canvas.svelte';
 	import Cordinates from '$lib/components/Cordinates.svelte';
+	import Controls from '$lib/components/Controls.svelte';
+	import Body from '$lib/components/Body.svelte';
 </script>
 
 <div
@@ -8,4 +10,6 @@
 >
 	<Canvas />
 	<Cordinates />
+	<Controls />
+	<Body />
 </div>

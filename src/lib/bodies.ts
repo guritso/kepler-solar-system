@@ -56,7 +56,7 @@ function fromOrbital(
 
 const sun: Body = {
 	name: 'Sun',
-	radius: 20,
+	radius: 10,
 	x: 0,
 	y: 0,
 	vx: 0,

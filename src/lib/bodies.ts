@@ -15,6 +15,7 @@ export interface Body {
 
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
+
 // Simulation scale: existing code places Earth at x ~ 215 for a = 1 AU.
 // We'll map 1 AU -> 215 simulation units. Velocities from kepler are in AU/day,
 // while the simulation integrates using seconds, so convert AU/day -> AU/sec by /86400,
@@ -31,9 +32,11 @@ function fromOrbital(
 ) {
 	const now = Date.now();
 	const state = keplerToCartesian(elements, now);
+
 	// positions: AU -> sim units
 	const x = state.x * AU_TO_SIM;
 	const y = state.y * AU_TO_SIM;
+
 	// velocities: AU/day -> AU/sec -> sim units/sec
 	const vx = (state.vx / DAY_TO_SEC) * AU_TO_SIM;
 	const vy = (state.vy / DAY_TO_SEC) * AU_TO_SIM;
@@ -65,6 +68,7 @@ const sun: Body = {
 	},
 	trail: []
 };
+
 // Basic orbital elements (simplified, epoch arbitrary = Date.now()) in units expected by keplerToCartesian
 // Source: approximate semi-major axes and eccentricities for illustration
 const mercuryEl: OrbitalElements = {
@@ -77,67 +81,68 @@ const mercuryEl: OrbitalElements = {
 	epoch: 1759536000000
 };
 const venusEl: OrbitalElements = {
-	a: 0.7193075628881022,
-	e: 0.00961301922234237,
-	i: 3.395190616929889,
-	Ω: 76.61547876637461,
-	ω: 346.1809908562251,
-	M: 70.73681720932568,
-	epoch: 1759536000000
+	 a: 0.7193075628881022,
+	 e: 0.00961301922234237,
+	 i: 3.395190616929889,
+	 Ω: 76.61547876637461,
+	 ω: 346.1809908562251,
+	 M: 70.73681720932568,
+	 epoch: 1759536000000
 };
 const earthEl: OrbitalElements = {
-	a: 0.9884778595229721,
-	e: 0.0224665980676975,
-	i: 0.009361834796841753,
-	Ω: 242.5714748746163,
-	ω: 238.093817256785,
-	M: 252.1662094875961,
-	epoch: 1759536000000
+	 a: 0.9884778595229721,
+	 e: 0.0224665980676975,
+	 i: 0.009361834796841753,
+	 Ω: 242.5714748746163,
+	 ω: 238.093817256785,
+	 M: 252.1662094875961,
+	 epoch: 1759536000000
 };
 const marsEl: OrbitalElements = {
-	a: 1.5361808446362526,
-	e: 0.09327957122076079,
-	i: 1.846149199958463,
-	Ω: 49.67412197237504,
-	ω: 284.0761205312491,
-	M: 271.5705002287118,
-	epoch: 1759536000000
+	 a: 1.5361808446362526,
+	 e: 0.09327957122076079,
+	 i: 1.846149199958463,
+	 Ω: 49.67412197237504,
+	 ω: 284.0761205312491,
+	 M: 271.5705002287118,
+	 epoch: 1759536000000
 };
 const jupiterEl: OrbitalElements = {
-	a: 5.196872446649367,
-	e: 0.04902661375752699,
-	i: 1.303775355536004,
-	Ω: 100.4997221050677,
-	ω: 273.2754318441118,
-	M: 82.23624259872942,
-	epoch: 1759536000000
+	 a: 5.196872446649367,
+	 e: 0.04902661375752699,
+	 i: 1.303775355536004,
+	 Ω: 100.4997221050677,
+	 ω: 273.2754318441118,
+	 M: 82.23624259872942,
+	 epoch: 1759536000000
 };
+
 const saturnEl: OrbitalElements = {
-	a: 9.537827257799261,
-	e: 0.05454059430016105,
-	i: 2.488808873212828,
-	Ω: 113.644119191983,
-	ω: 338.5479951631343,
-	M: 272.6176161051636,
-	epoch: 1759536000000
+	 a: 9.537827257799261,
+	 e: 0.05454059430016105,
+	 i: 2.488808873212828,
+	 Ω: 113.644119191983,
+	 ω: 338.5479951631343,
+	 M: 272.6176161051636,
+	 epoch: 1759536000000
 };
 const uranusEl: OrbitalElements = {
-	a: 19.188180030037476,
-	e: 0.04726029813008705,
-	i: 0.7726304037113545,
-	Ω: 73.99333322935934,
-	ω: 97.11194454391001,
-	M: 252.4895802486794,
-	epoch: 1759536000000
+	 a: 19.188180030037476,
+	 e: 0.04726029813008705,
+	 i: 0.7726304037113545,
+	 Ω: 73.99333322935934,
+	 ω: 97.11194454391001,
+	 M: 252.4895802486794,
+	 epoch: 1759536000000
 };
 const neptuneEl: OrbitalElements = {
-	a: 30.06973093117018,
-	e: 0.008593397795593868,
-	i: 1.775164447238822,
-	Ω: 131.9635756395051,
-	ω: 272.6698679970442,
-	M: 316.5089329576374,
-	epoch: 1759536000000
+	 a: 30.06973093117018,
+	 e: 0.008593397795593868,
+	 i: 1.775164447238822,
+	 Ω: 131.9635756395051,
+	 ω: 272.6698679970442,
+	 M: 316.5089329576374,
+	 epoch: 1759536000000
 };
 
 const mercury: Body = fromOrbital('Mercury', mercuryEl, 3.3014e23, 0.003506, {

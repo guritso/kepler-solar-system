@@ -6,7 +6,7 @@
 		$timeScale = $timeScale === 0 ? 1 : 0;
 	}
 	function accelerate() {
-		if ($timeScale < 10 ** 8) {
+		if ($timeScale < Infinity) {
 			$timeScale *= 10;
 		}
 	}

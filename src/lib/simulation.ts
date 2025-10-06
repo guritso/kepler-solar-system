@@ -1,5 +1,4 @@
 import { keplerToCartesian } from './kepler';
-import type { OrbitalElements } from './kepler';
 import type { Body } from './bodies';
 import { updateDynamicTrail } from './trails';
 

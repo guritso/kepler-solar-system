@@ -1,38 +1,53 @@
-# sv
+# Kepler Solar System 2d
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+An interactive real-time simulation of our solar system, built with Svelte and TypeScript.
 
-## Creating a project
+## What is this?
 
-If you're seeing this, you've probably already done this step. Congrats!
+This project simulates the movement of planets and other celestial bodies using real physics based on Keplerian orbital elements.
+## Key Features
 
-```sh
-# create a new project in the current directory
-npx sv create
+- **Accurate simulation**: Uses real orbital elements to calculate positions and velocities of planets
+- **Planets and bodies**: Includes all major planets in the solar system.
+- **Interactive visualization**: HTML5 Canvas with zoom, pan and speed controls
+- **Dynamic trails**: Shows the path traveled by celestial bodies
+- **Modern interface**: Built with Svelte 5, TypeScript and Tailwind CSS
 
-# create a new project in my-app
-npx sv create my-app
+## How to run
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run in development
+pnpm dev
+
+# Build for production
+pnpm build
 ```
 
-## Developing
+Then just open your browser at `http://localhost:5173` and enjoy the show!
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## How it works under the hood
 
-```sh
-npm run dev
+- **Keplerian elements**: Each planet has its real orbital parameters (semi-major axis, eccentricity, inclination, etc.)
+- **Real-time conversion**: Positions are calculated in real-time based on the current time
+- **Numerical integration**: Comets use numerical integration to calculate their trajectory under the Sun's gravitational influence
+- **Optimization**: Smart trails and performance limits to keep everything running smoothly
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Technologies used
 
-## Building
+- Svelte 5 (modern web framework)
+- TypeScript (static typing)
+- Tailwind CSS (styling)
+- HTML5 Canvas (rendering)
+- Vite (build tool)
 
-To create a production version of your app:
+## Important files
 
-```sh
-npm run build
-```
+- `src/lib/bodies.ts` - Defines all celestial bodies and their orbital parameters
+- `src/lib/simulation.ts` - Main physics simulation logic
+- `src/lib/components/Canvas.svelte` - Main canvas component
+- `src/lib/kepler.ts` - Orbital calculations based on Keplerian elements
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Have fun exploring the cosmos!

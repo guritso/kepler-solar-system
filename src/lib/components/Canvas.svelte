@@ -1,8 +1,16 @@
 <script lang="ts">
-	import { coordinates, bodies, simulationTime, timeScale, showTag, selectedBody, resetTime } from '$lib/stores';
+	import {
+		coordinates,
+		bodies,
+		simulationTime,
+		timeScale,
+		showTag,
+		selectedBody,
+		resetTime
+	} from '$lib/stores';
 	import { updateBodies } from '$lib/simulation';
 	import type { Body } from '$lib/bodies';
-	import { drawTrail } from '$lib/trails'
+	import { drawTrail } from '$lib/trails';
 
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
@@ -115,7 +123,7 @@
 			ctx.beginPath();
 			ctx.arc(body.x * gridSize, body.y * gridSize, body.radius, 0, Math.PI * 2);
 			ctx.fill();
-			
+
 			if ($showTag) {
 				ctx.fillStyle = 'white';
 				ctx.font = `${12 / scale}px Arial`;
@@ -140,21 +148,21 @@
 
 		let closest: Body | null = null;
 		let minDistPx = Infinity;
-		
+
 		// Hitbox sizing (in pixels): ensures small bodies are clickable when zoomed out
 		const MIN_HIT_PX = 8; // minimum clickable radius in pixels
 		const MAX_HIT_PX = 80; // maximum clickable radius in pixels
 		const HIT_MULTIPLIER = 1.5; // multiplier of drawn radius
-		
+
 		$bodies.forEach((body) => {
 			// Convert body world coordinates to screen (pixel) coordinates
 			const bodyScreenX = canvas.width / 2 + offsetX + scale * (body.x * gridSize);
 			const bodyScreenY = canvas.height / 2 + offsetY + scale * (body.y * gridSize);
-			
+
 			const dx = bodyScreenX - clickClientX;
 			const dy = bodyScreenY - clickClientY;
 			const distPx = Math.sqrt(dx * dx + dy * dy);
-			
+
 			// On-screen drawn radius (pixels) = body.radius * scale
 			const drawnRadiusPx = Math.abs(body.radius * scale);
 
@@ -187,17 +195,17 @@
 	// zoom events
 	function wheel(event: WheelEvent) {
 		event.preventDefault();
-		
+
 		const zoomSpeed = 0.1;
 		const oldScale = scale;
-		
+
 		scale *= event.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
 		scale = Math.max(farthestZoom, Math.min(scale, closestZoom)); // limit zoom
-		
+
 		// keep zoom on the cursor
 		const cursorX = event.clientX - canvas.width / 2;
 		const cursorY = event.clientY - canvas.height / 2;
-		
+
 		offsetX = cursorX - (cursorX - offsetX) * (scale / oldScale);
 		offsetY = cursorY - (cursorY - offsetY) * (scale / oldScale);
 
@@ -215,17 +223,17 @@
 		cursorY = (event.clientY - canvas.height / 2 - offsetY) / (scale * gridSize);
 		centerX = -offsetX / (scale * gridSize);
 		centerY = -offsetY / (scale * gridSize);
-		
+
 		if (isDragging) {
 			event.preventDefault();
-			
+
 			offsetX = event.clientX - startX;
 			offsetY = event.clientY - startY;
 		}
 
 		draw();
 	}
-	
+
 	$effect(() => {
 		$coordinates = {
 			x: centerX,
@@ -237,11 +245,10 @@
 
 		$simulationTime = actualTime;
 	});
-
 </script>
 
 <canvas
-class="absolute inset-0 overflow-hidden"
+	class="absolute inset-0 overflow-hidden"
 	style="touch-action: none;"
 	bind:this={canvas}
 	onpointerdown={pointerdown}

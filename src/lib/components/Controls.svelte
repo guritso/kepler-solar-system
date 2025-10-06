@@ -27,7 +27,9 @@
 	let acceleration = $derived($timeScale === 0 ? 'Paused' : `${$timeScale}x`);
 </script>
 
-<div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800/70 rounded-lg text-white flex flex-col gap-2 items-center p-4">
+<div
+	class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800/70 rounded-lg text-white flex flex-col gap-2 items-center p-4"
+>
 	<div class="flex gap-2 items-center mb-2">
 		<span>Time: {formattedTime}</span>
 		<span>Speed: {acceleration}</span>

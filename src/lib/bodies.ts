@@ -1,3 +1,8 @@
+
+import { keplerToCartesian } from './kepler';
+import type { OrbitalElements } from './kepler';
+import { computeOrbitPoints } from './trails';
+
 export interface Body {
 	name: string;
 	x: number;
@@ -11,11 +16,9 @@ export interface Body {
 		two: string;
 	};
 	trail?: { x: number; y: number }[]; // Optional trail for comets only
+	orbit?: { x: number; y: number }[]; // Nova: pontos da órbita completa
+	orbitalElements?: OrbitalElements; // Elementos keplerianos
 }
-
-import { keplerToCartesian } from './kepler';
-import type { OrbitalElements } from './kepler';
-
 // Simulation scale: existing code places Earth at x ~ 215 for a = 1 AU.
 // We'll map 1 AU -> 215 simulation units. Velocities from kepler are in AU/day,
 // while the simulation integrates using seconds, so convert AU/day -> AU/sec by /86400,
@@ -156,59 +159,79 @@ const mercury: Body = fromOrbital('Mercury', mercuryEl, 3.3014e23, 0.003506, {
 	one: 'rgb(200, 200, 200)',
 	two: 'rgb(100, 100, 100)'
 });
+mercury.orbit = computeOrbitPoints(mercuryEl);
+mercury.orbitalElements = mercuryEl;
 
 const venus: Body = fromOrbital('Venus', venusEl, 4.8675e24, 0.008699, {
 	one: 'rgb(255, 200, 100)',
 	two: 'rgb(200, 100, 0)'
 });
+venus.orbit = computeOrbitPoints(venusEl);
+venus.orbitalElements = venusEl;
 
 const earth: Body = fromOrbital('Earth', earthEl, 5.9723e24, 0.009158, {
 	one: 'rgb(0, 121, 202)',
 	two: 'rgba(21, 204, 76, 0.57)'
 });
+earth.orbit = computeOrbitPoints(earthEl);
+earth.orbitalElements = earthEl;
 
 const mars: Body = fromOrbital('Mars', marsEl, 6.4171e23, 0.004872, {
 	one: 'rgb(255, 100, 50)',
 	two: 'rgb(150, 50, 0)'
 });
+mars.orbit = computeOrbitPoints(marsEl);
+mars.orbitalElements = marsEl;
 
 const jupiter: Body = fromOrbital('Jupiter', jupiterEl, 1.8982e27, 0.100476, {
 	one: 'rgb(201, 230, 71)',
 	two: 'rgba(255, 230, 0, 0.57)'
 });
+jupiter.orbit = computeOrbitPoints(jupiterEl);
+jupiter.orbitalElements = jupiterEl;
 
 const saturn: Body = fromOrbital('Saturn', saturnEl, 5.6834e26, 0.083703, {
 	one: 'rgb(250, 200, 100)',
 	two: 'rgb(200, 150, 50)'
 });
+saturn.orbit = computeOrbitPoints(saturnEl);
+saturn.orbitalElements = saturnEl;
 
 const uranus: Body = fromOrbital('Uranus', uranusEl, 8.681e25, 0.036456, {
 	one: 'rgb(100, 200, 255)',
 	two: 'rgb(50, 100, 150)'
 });
+uranus.orbit = computeOrbitPoints(uranusEl);
+uranus.orbitalElements = uranusEl;
 
 const neptune: Body = fromOrbital('Neptune', neptuneEl, 1.0241e26, 0.035396, {
 	one: 'rgb(50, 100, 255)',
 	two: 'rgb(0, 50, 150)'
 });
+neptune.orbit = computeOrbitPoints(neptuneEl);
+neptune.orbitalElements = neptuneEl;
 
 const ceres: Body = fromOrbital('Ceres', ceresEl, 9.393e20, 0.000675, {
     one: 'rgb(200,200,200)',
     two: 'rgb(160,160,160)'
 });
+ceres.orbit = computeOrbitPoints(ceresEl);
+ceres.orbitalElements = ceresEl;
 
 const atlas: Body = {
 	name: '3I/ATLAS',
 	radius: sun.radius * 0.0005, // Exaggerated for visibility; real ~2e-6
 	x: -260.8,
 	y: -412.8,
-	vx: -3.24e-5,
-	vy: 8.91e-5,
+	vx: -3.24e-5 * 0.30,
+	vy: 8.91e-5 * 0.30,
 	mass: 1e13, // Approximate comet mass
 	gradient: {
 		one: 'rgb(200, 200, 255)',
 		two: 'rgba(100, 100, 200, 0.6)'
-	}
+	},
+	trail: [],
+	orbit:[]
 };
 
 export const bodies: Body[] = [

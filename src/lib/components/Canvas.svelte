@@ -141,23 +141,43 @@
 		startY = event.clientY - offsetY;
 
 		const rect = canvas.getBoundingClientRect();
-		const clickX = (event.clientX - rect.left - canvas.width / 2 - offsetX) / (scale * gridSize);
-		const clickY = (event.clientY - rect.top - canvas.height / 2 - offsetY) / (scale * gridSize);
+		const clickClientX = event.clientX - rect.left;
+		const clickClientY = event.clientY - rect.top;
 
 		let closest: Body | null = null;
-		let minDist = Infinity;
+		let minDistPx = Infinity;
+
+		// Hitbox sizing (in pixels): ensures small bodies are clickable when zoomed out
+		const MIN_HIT_PX = 8; // minimum clickable radius in pixels
+		const MAX_HIT_PX = 80; // maximum clickable radius in pixels
+		const HIT_MULTIPLIER = 1.5; // multiplier of drawn radius
 
 		$bodies.forEach((body) => {
-			const dist = Math.sqrt((body.x - clickX) ** 2 + (body.y - clickY) ** 2);
-			if (dist < (body.radius / scale) * gridSize && dist < minDist) {
-				// Threshold
-				minDist = dist;
+			// Convert body world coordinates to screen (pixel) coordinates
+			const bodyScreenX = canvas.width / 2 + offsetX + scale * (body.x * gridSize);
+			const bodyScreenY = canvas.height / 2 + offsetY + scale * (body.y * gridSize);
+
+			const dx = bodyScreenX - clickClientX;
+			const dy = bodyScreenY - clickClientY;
+			const distPx = Math.sqrt(dx * dx + dy * dy);
+
+			// On-screen drawn radius (pixels) = body.radius * scale
+			const drawnRadiusPx = Math.abs(body.radius * scale);
+
+			// Dynamic hit radius: proportional to drawn size but clamped between min/max
+			const hitRadiusPx = Math.max(
+				MIN_HIT_PX,
+				Math.min(drawnRadiusPx * HIT_MULTIPLIER, MAX_HIT_PX)
+			);
+
+			if (distPx <= hitRadiusPx && distPx < minDistPx) {
+				minDistPx = distPx;
 				closest = body;
 			}
 		});
-		selectedBody.set(closest);
 
-		console.log(closest);
+		selectedBody.set(closest);
+		// console.debug('clicked', closest?.name, closest, { scale, offsetX, offsetY });
 	}
 
 	function pointerup() {

@@ -144,6 +144,15 @@ const neptuneEl: OrbitalElements = {
 	 M: 316.5089329576374,
 	 epoch: 1759536000000
 };
+const ceresEl: OrbitalElements = {
+	a: 2.75335009,
+	e: 8.256884979564472E-02,
+	i: 1.059670287549551E+01,
+	Ω: 8.022742118128347E+01,
+	ω: 7.411014758807298E+01,
+	M: 2.204689200573771E+02,
+	epoch: 1759536000000
+};
 
 const mercury: Body = fromOrbital('Mercury', mercuryEl, 3.3014e23, 0.003506, {
 	one: 'rgb(200, 200, 200)',
@@ -185,6 +194,11 @@ const neptune: Body = fromOrbital('Neptune', neptuneEl, 1.0241e26, 0.035396, {
 	two: 'rgb(0, 50, 150)'
 });
 
+const ceres: Body = fromOrbital('Ceres', ceresEl, 9.393e20, 0.000675, {
+    one: 'rgb(200,200,200)',
+    two: 'rgb(160,160,160)'
+});
+
 const atlas: Body = {
 	name: '3I/ATLAS',
 	radius: sun.radius * 0.0005, // Exaggerated for visibility; real ~2e-6
@@ -210,5 +224,6 @@ export const bodies: Body[] = [
 	saturn,
 	uranus,
 	neptune,
+	ceres,
 	atlas
 ];

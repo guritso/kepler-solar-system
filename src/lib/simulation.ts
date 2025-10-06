@@ -28,28 +28,29 @@ export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
 	});
 
 	// numeric for cometa
-	const comet = bodies.find((b) => b.name === '3I/ATLAS');
-	if (comet && dt > 0) {
-		const sun = bodies[0];
-		const fixedDt = 0.01; // Substep base pra precisão
-		let substeps = Math.ceil(dt / fixedDt);
-		substeps = Math.min(substeps, 50); // Limite pra performance
-		const effectiveDt = dt / substeps;
+	bodies.forEach((body) => {
+		if (!body.orbitalElements && dt > 0) { // Qualquer body sem elementos keplerianos
+			const sun = bodies[0];
+			const fixedDt = 0.01; // Substep base pra precisão
+			let substeps = Math.ceil(dt / fixedDt);
+			substeps = Math.min(substeps, 50); // Limite pra performance
+			const effectiveDt = dt / substeps;
 
-		for (let step = 0; step < substeps; step++) {
-			const dx = sun.x - comet.x;
-			const dy = sun.y - comet.y;
-			const r = Math.sqrt(dx * dx + dy * dy);
-			if (r > 0) {
-				const accelMag = GM_sun / (r * r);
-				const ax = accelMag * (dx / r);
-				const ay = accelMag * (dy / r);
-				comet.vx += ax * effectiveDt;
-				comet.vy += ay * effectiveDt;
-				comet.x += comet.vx * effectiveDt;
-				comet.y += comet.vy * effectiveDt;
-				updateDynamicTrail(comet, 500); // Trail mais curto pra cometa rápida
+			for (let step = 0; step < substeps; step++) {
+				const dx = sun.x - body.x;
+				const dy = sun.y - body.y;
+				const r = Math.sqrt(dx * dx + dy * dy);
+				if (r > 0) {
+					const accelMag = GM_sun / (r * r);
+					const ax = accelMag * (dx / r);
+					const ay = accelMag * (dy / r);
+					body.vx += ax * effectiveDt;
+					body.vy += ay * effectiveDt;
+					body.x += body.vx * effectiveDt;
+					body.y += body.vy * effectiveDt;
+					updateDynamicTrail(body, 500); // Trail curto pra cometas rápidas
+				}
 			}
 		}
-	}
+	});
 }

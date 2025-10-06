@@ -5,17 +5,18 @@ import { updateDynamicTrail } from './trails';
 
 const AU_TO_SIM = 215;
 const DAY_TO_SEC = 86400;
-const GM_sun = 3.94e-7; // Só pro cometa
+const GM_sun = 3.94e-7; // only for cometa
 
 /**
- * Atualiza posições/velocidades dos bodies baseado no tempo simulado.
- * - Analítica pra planetas (exata!).
- * - Numérica simples pro cometa ATLAS.
+ * update bodies positions and velocities
+ * - analytical for planets (exact!)
+ * - numeric for cometa ATLAS
  * @param bodies - Array mutável de bodies
  * @param actualTime - Tempo em ms (de Canvas.svelte)
+ * @param dt - Delta time em segundos (pro cometa numérico)
  */
-export function updateBodies(bodies: Body[], actualTime: number) {
-	// Atualização ANALÍTICA pros planetas
+export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
+	// analytical for planets (exact!)
 	bodies.forEach((body) => {
 		if (body.orbitalElements) {
 			const state = keplerToCartesian(body.orbitalElements, actualTime);
@@ -26,23 +27,29 @@ export function updateBodies(bodies: Body[], actualTime: number) {
 		}
 	});
 
-	// Atualização NUMÉRICA só pro cometa ATLAS
+	// numeric for cometa
 	const comet = bodies.find((b) => b.name === '3I/ATLAS');
-	if (comet) {
+	if (comet && dt > 0) {
 		const sun = bodies[0];
-		const dt = 0.01; // Fixed small dt pra estabilidade (ajuste se precisar)
-		const dx = sun.x - comet.x;
-		const dy = sun.y - comet.y;
-		const r = Math.sqrt(dx * dx + dy * dy);
-		if (r > 0) {
-			const accelMag = GM_sun / (r * r);
-			const ax = accelMag * (dx / r);
-			const ay = accelMag * (dy / r);
-			comet.vx += ax * dt;
-			comet.vy += ay * dt;
-			comet.x += comet.vx * dt;
-			comet.y += comet.vy * dt;
-			updateDynamicTrail(comet);
+		const fixedDt = 0.01; // Substep base pra precisão
+		let substeps = Math.ceil(dt / fixedDt);
+		substeps = Math.min(substeps, 50); // Limite pra performance
+		const effectiveDt = dt / substeps;
+
+		for (let step = 0; step < substeps; step++) {
+			const dx = sun.x - comet.x;
+			const dy = sun.y - comet.y;
+			const r = Math.sqrt(dx * dx + dy * dy);
+			if (r > 0) {
+				const accelMag = GM_sun / (r * r);
+				const ax = accelMag * (dx / r);
+				const ay = accelMag * (dy / r);
+				comet.vx += ax * effectiveDt;
+				comet.vy += ay * effectiveDt;
+				comet.x += comet.vx * effectiveDt;
+				comet.y += comet.vy * effectiveDt;
+				updateDynamicTrail(comet, 500); // Trail mais curto pra cometa rápida
+			}
 		}
 	}
 }

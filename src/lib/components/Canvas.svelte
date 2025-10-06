@@ -84,7 +84,7 @@
 			resetTime.set(false);
 		}
 
-		updateBodies($bodies, actualTime);
+		updateBodies($bodies, actualTime, dt);
 
 		bodies.set([...$bodies]); // Trigger reactivity
 		draw(); // Redraw

@@ -10,7 +10,7 @@ export interface Body {
 		one: string;
 		two: string;
 	};
-	trail: { x: number; y: number }[];
+	trail?: { x: number; y: number }[]; // Optional trail for comets only
 }
 
 import { keplerToCartesian } from './kepler';
@@ -49,8 +49,7 @@ function fromOrbital(
 		vx,
 		vy,
 		mass,
-		gradient,
-		trail: [] as { x: number; y: number }[]
+		gradient
 	};
 }
 
@@ -63,10 +62,9 @@ const sun: Body = {
 	vy: 0,
 	mass: 1.989e30,
 	gradient: {
-		one: 'rgb(255, 252, 52)',
-		two: 'rgb(236, 88, 20)'
-	},
-	trail: []
+		one: 'rgb(255, 253, 131)',
+		two: 'rgb(255, 217, 0)'
+	}
 };
 
 // Basic orbital elements (simplified, epoch arbitrary = Date.now()) in units expected by keplerToCartesian
@@ -210,8 +208,7 @@ const atlas: Body = {
 	gradient: {
 		one: 'rgb(200, 200, 255)',
 		two: 'rgba(100, 100, 200, 0.6)'
-	},
-	trail: []
+	}
 };
 
 export const bodies: Body[] = [

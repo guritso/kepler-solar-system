@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { coordinates, bodies, time, timeScale, showTag, selectedBody } from '$lib/stores';
 	import { calculateGravity } from '$lib/gravity';
+	import { createOrbitsForAllBodies } from '$lib/orbit';
 	import type { Body } from '$lib/bodies';
 
 	let canvas: HTMLCanvasElement;
@@ -8,7 +9,7 @@
 
 	let offsetX = $state(0);
 	let offsetY = $state(0);
-	let scale = $state(1);
+	let scale = $state(0.1);
 	let gridSize = $state(20);
 	let isDragging = false;
 	let startX: number, startY: number;
@@ -23,6 +24,10 @@
 
 	let actualTime = $state(0);
 	let isVisible = $state(true);
+
+	// Cache para órbitas - evita recálculo desnecessário
+	let orbitCache = $state<Map<string, { x: number; y: number }[]> | null>(null);
+	let lastBodiesState = $state<string>('');
 
 	$effect(() => {
 		if (!canvas) return;
@@ -59,6 +64,11 @@
 	let date = new Date().getTime();
 	let seconds = 0;
 
+	function isComet(body: Body): boolean {
+		// Identifica cometas baseado no nome ou outras características
+		return body.name.includes('ATLAS') || body.name.includes('Comet') || body.trail !== undefined;
+	}
+
 	function animate(currentTime: number) {
 		if (!isVisible) return;
 
@@ -73,16 +83,95 @@
 
 		$bodies.forEach((body) => {
 			if (body !== $bodies[0]) {
-				// Skip Sun
-				body.trail.push({ x: body.x, y: body.y });
-				if (body.trail.length > 1000) body.trail.shift();
+				// Skip Sun - only add trails for comets
+				if (isComet(body) && body.trail) {
+					body.trail.push({ x: body.x, y: body.y });
+					if (body.trail.length > 500) body.trail.shift(); // Shorter trail for comets
+				}
 			}
 		});
 
 		bodies.set([...$bodies]); // Trigger reactivity
 		draw(); // Redraw
 
+		if ($selectedBody) {
+			offsetX = -scale * $selectedBody.x * gridSize;
+			offsetY = -scale * $selectedBody.y * gridSize;
+		}
+
 		animationId = requestAnimationFrame(animate);
+	}
+
+	function drawOrbits() {
+		// Verifica se precisamos recalcular as órbitas
+		const currentState = JSON.stringify($bodies.map(b => ({ name: b.name, x: b.x, y: b.y, vx: b.vx, vy: b.vy })));
+
+		if (orbitCache === null || lastBodiesState !== currentState) {
+			orbitCache = createOrbitsForAllBodies($bodies);
+			lastBodiesState = currentState;
+		}
+
+		orbitCache.forEach((orbitPoints, bodyName) => {
+			const body = $bodies.find(b => b.name === bodyName);
+			if (!body || orbitPoints.length < 2) return;
+
+			ctx.save();
+
+			// Configurações para desenho eficiente
+			ctx.strokeStyle = body.gradient.one;
+			ctx.lineWidth = 1 / scale;
+			ctx.globalAlpha = 0.4;
+			ctx.lineCap = 'round';
+			ctx.lineJoin = 'round';
+
+			// Usa linha sólida para máxima performance
+			ctx.setLineDash([]);
+
+			ctx.beginPath();
+
+			// Move to first point
+			const firstPoint = orbitPoints[0];
+			ctx.moveTo(firstPoint.x * gridSize, firstPoint.y * gridSize);
+
+			// Draw line through all orbit points
+			for (let i = 1; i < orbitPoints.length; i++) {
+				const point = orbitPoints[i];
+				ctx.lineTo(point.x * gridSize, point.y * gridSize);
+			}
+
+			// Close the path for elliptical orbits
+			if (orbitPoints.length > 10) {
+				ctx.closePath();
+			}
+
+			ctx.stroke();
+			ctx.restore();
+		});
+	}
+
+	function drawCometTrails() {
+		$bodies.forEach((body: Body) => {
+			if (isComet(body) && body.trail && body.trail.length > 1) {
+				ctx.strokeStyle = body.gradient.one;
+				ctx.lineWidth = 2 / scale;
+				ctx.globalAlpha = 0.6;
+				ctx.lineCap = 'round';
+
+				ctx.beginPath();
+				ctx.moveTo(body.trail[0].x * gridSize, body.trail[0].y * gridSize);
+
+				// Draw trail with fading effect (newer points are brighter)
+				for (let i = 1; i < body.trail.length; i++) {
+					const alpha = i / body.trail.length;
+					ctx.globalAlpha = alpha * 0.6;
+
+					ctx.lineTo(body.trail[i].x * gridSize, body.trail[i].y * gridSize);
+				}
+
+				ctx.stroke();
+				ctx.globalAlpha = 1;
+			}
+		});
 	}
 
 	function draw() {
@@ -92,21 +181,33 @@
 		ctx.translate(canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
 		ctx.scale(scale, scale);
 
-		$bodies.forEach((body: Body) => {
-			if (body.trail.length > 1 && body.name !== 'Sun') {
-				ctx.strokeStyle = body.gradient.one;
-				ctx.lineWidth = 1 / scale;
-				ctx.lineCap = 'round';
-				ctx.beginPath();
-				ctx.moveTo(body.trail[0].x * gridSize, body.trail[0].y * gridSize);
-				body.trail.forEach((point) => {
-					ctx.lineTo(point.x * gridSize, point.y * gridSize);
-				});
-				ctx.stroke();
-			}
-		});
+		// Draw orbits first (behind bodies)
+		drawOrbits();
+
+		// Draw comet trails (between orbits and bodies)
+		drawCometTrails();
 
 		$bodies.forEach((body: Body) => {
+			// Draw glow effect for the Sun
+			if (body.name === 'Sun') {
+				const glowGradient = ctx.createRadialGradient(
+					body.x * gridSize,
+					body.y * gridSize,
+					body.radius,
+					body.x * gridSize,
+					body.y * gridSize,
+					body.radius * 7
+				);
+				glowGradient.addColorStop(0, 'rgba(255, 253, 131, 0.9)');
+				glowGradient.addColorStop(0.3, 'rgba(255, 230, 100, 0.6)');
+				glowGradient.addColorStop(0.7, 'rgba(255, 200, 50, 0.3)');
+				glowGradient.addColorStop(1, 'rgba(255, 180, 0, 0)');
+				ctx.fillStyle = glowGradient;
+				ctx.beginPath();
+				ctx.arc(body.x * gridSize, body.y * gridSize, body.radius * 7, 0, Math.PI * 2);
+				ctx.fill();
+			}
+
 			const gradient = ctx.createRadialGradient(
 				body.x * gridSize,
 				body.y * gridSize,

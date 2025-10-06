@@ -17,6 +17,7 @@ export interface Body {
 	trail?: { x: number; y: number }[]; // Optional trail for comets only
 	orbit?: { x: number; y: number }[]; // Nova: pontos da órbita completa
 	orbitalElements?: OrbitalElements; // Elementos keplerianos
+	isComet?: boolean;
 }
 // Simulation scale: existing code places Earth at x ~ 215 for a = 1 AU.
 // We'll map 1 AU -> 215 simulation units. Velocities from kepler are in AU/day,
@@ -219,19 +220,36 @@ ceres.orbitalElements = ceresEl;
 
 const atlas: Body = {
 	name: '3I/ATLAS',
-	radius: sun.radius * 0.0005, // Exaggerated for visibility; real ~2e-6
+	radius: sun.radius * 0.0005,
 	x: -260.8,
 	y: -412.8,
-	vx: -3.24e-5 * 0.3,
-	vy: 8.91e-5 * 0.3,
-	mass: 1e13, // Approximate comet mass
+	vx: -3.24e-5,
+	vy: 8.91e-5,
+	mass: 1e13,
 	gradient: {
 		one: 'rgb(200, 200, 255)',
 		two: 'rgba(100, 100, 200, 0.6)'
 	},
 	trail: [],
-	orbit: []
+	isComet: true
 };
+
+
+const halley: Body = {
+	name: '1I/Halley',
+	radius: sun.radius * 0.0004,
+	x: 150.2,
+	y: 320.5,
+	vx: 2.15e-5,
+	vy: -1.23e-5,
+	mass: 2.2e14,
+	gradient: {
+		one: 'rgb(255, 150, 200)',
+		two: 'rgba(200, 50, 150, 0.6)'
+	},
+	trail: [],
+	isComet: true
+}
 
 export const bodies: Body[] = [
 	sun,
@@ -244,5 +262,6 @@ export const bodies: Body[] = [
 	uranus,
 	neptune,
 	ceres,
-	atlas
+	atlas,
+	halley
 ];

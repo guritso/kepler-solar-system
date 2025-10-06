@@ -10,10 +10,10 @@ const GM_sun = 3.94e-7; // only for cometa
 /**
  * update bodies positions and velocities
  * - analytical for planets (exact!)
- * - numeric for cometa ATLAS
- * @param bodies - Array mutável de bodies
- * @param actualTime - Tempo em ms (de Canvas.svelte)
- * @param dt - Delta time em segundos (pro cometa numérico)
+ * - numeric for comets
+ * @param bodies - Array of bodies
+ * @param actualTime - Time in ms (from Canvas.svelte)
+ * @param dt - Delta time in seconds (for numeric comets)
  */
 export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
 	// analytical for planets (exact!)
@@ -27,13 +27,13 @@ export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
 		}
 	});
 
-	// numeric for cometa
+	// numeric for comets
 	bodies.forEach((body) => {
-		if (!body.orbitalElements && dt > 0) { // Qualquer body sem elementos keplerianos
+		if (!body.orbitalElements && dt > 0) { 
 			const sun = bodies[0];
-			const fixedDt = 0.01; // Substep base pra precisão
+			const fixedDt = 0.01; // Substep for precision
 			let substeps = Math.ceil(dt / fixedDt);
-			substeps = Math.min(substeps, 50); // Limite pra performance
+			substeps = Math.min(substeps, 50); // Limit for performance
 			const effectiveDt = dt / substeps;
 
 			for (let step = 0; step < substeps; step++) {
@@ -48,7 +48,7 @@ export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
 					body.vy += ay * effectiveDt;
 					body.x += body.vx * effectiveDt;
 					body.y += body.vy * effectiveDt;
-					updateDynamicTrail(body, 500); // Trail curto pra cometas rápidas
+					updateDynamicTrail(body, 500); // Short trail for fast comets
 				}
 			}
 		}

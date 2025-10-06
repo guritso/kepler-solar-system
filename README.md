@@ -1,5 +1,9 @@
 # Kepler Solar System 2d
 
+| example |
+| ------- |
+|![example](./docs/example.png)|
+
 An interactive real-time simulation of our solar system, built with Svelte and TypeScript.
 
 ## What is this?

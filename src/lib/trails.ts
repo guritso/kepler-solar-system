@@ -3,33 +3,33 @@ import type { OrbitalElements } from './kepler';
 import type { Body } from './bodies';
 
 const AU_TO_SIM = 215; // Mesmo valor de bodies.ts
-const mu = 0.01720209895 ** 2; // Constante gravitacional (GM escalado pros seus units)
+const mu = 0.01720209895 ** 2; // Gravitational constant (GM scaled for your units)
 
 /**
- * Calcula pontos ao longo da órbita completa (amostragem uniforme por anomalia média).
- * Para planetas: elipse fechada. Para cometas hiperbólicos: arco aberto.
- * @param elements - Elementos keplerianos
- * @param numPoints - Número de pontos (mais = mais suave, default 360 para 1° por ponto)
- * @returns Array de {x, y} em unidades de simulação
+ * Calculates points along the complete orbit (uniform sampling by mean anomaly).
+ * For planets: closed ellipse. For hyperbolic comets: open arc.
+ * @param elements - Keplerian elements
+ * @param numPoints - Number of points (more = smoother, default 360 for 1° per point)
+ * @returns Array of {x, y} in simulation units
  */
 export function computeOrbitPoints(
 	elements: OrbitalElements,
 	numPoints: number = 360
 ): { x: number; y: number }[] {
 	const points: { x: number; y: number }[] = [];
-	const now = Date.now(); // Tempo atual (como em fromOrbital)
+	const now = Date.now(); // Current time (as in fromOrbital)
 
 	let currentM =
 		elements.M +
 		(((Math.sqrt(mu / Math.pow(elements.a, 3)) * (now - elements.epoch)) / 86400000) * 180) /
-			Math.PI; // M atual em deg
+			Math.PI; // Current M in degrees
 	currentM = ((currentM % 360) + 360) % 360;
 
 	for (let i = 0; i < numPoints; i++) {
-		const deltaM = (i / numPoints) * 360 - 180; // Varia -180° a +180° do atual (full loop)
+		const deltaM = (i / numPoints) * 360 - 180; // Varies from -180° to +180° from current (full loop)
 		const M_deg = (currentM + deltaM + 360) % 360;
 		const tempElements = { ...elements, M: M_deg };
-		const state = keplerToCartesian(tempElements, now); // No tempo atual
+		const state = keplerToCartesian(tempElements, now); // At current time
 
 		points.push({
 			x: state.x * AU_TO_SIM,
@@ -40,10 +40,10 @@ export function computeOrbitPoints(
 	return points;
 }
 /**
- * Atualiza trail dinâmico para cometas (acumula posições passadas).
- * Chame isso após cada update de posição.
- * @param body - Corpo com trail (ex: cometa)
- * @param maxLength - Máximo de pontos no trail (default 1000 para performance)
+ * Updates dynamic trail for comets (accumulates past positions).
+ * Call this after each position update.
+ * @param body - Body with trail (e.g.: comet)
+ * @param maxLength - Maximum points in trail (default 1000 for performance)
  */
 export function updateDynamicTrail(body: Body, maxLength: number = 1000) {
 	if (!body.trail) {
@@ -52,17 +52,17 @@ export function updateDynamicTrail(body: Body, maxLength: number = 1000) {
 
 	body.trail.push({ x: body.x, y: body.y });
 
-	// Limita comprimento para evitar memória excessiva
+	// Limits length to avoid excessive memory usage
 	if (body.trail.length > maxLength) {
 		body.trail.shift();
 	}
 }
 /**
- * Desenha a órbita ou trail no contexto (chame em Canvas.svelte).
- * @param ctx - Contexto 2D
- * @param body - Corpo
- * @param gridSize - Escala de grid (de Canvas.svelte)
- * @param scale - Escala atual (de Canvas.svelte)
+ * Draws the orbit or trail in the context (call in Canvas.svelte).
+ * @param ctx - 2D context
+ * @param body - Body
+ * @param gridSize - Grid scale (from Canvas.svelte)
+ * @param scale - Current scale (from Canvas.svelte)
  */
 export function drawTrail(
 	ctx: CanvasRenderingContext2D,
@@ -72,15 +72,15 @@ export function drawTrail(
 ) {
 	if (!body.orbit && !body.trail) return;
 
-	ctx.strokeStyle = body.gradient.one; // Cor do gradiente com alpha baixo (51% transparente)
-	ctx.lineWidth = Math.max(0.5, 1 / scale); // Linha fina, ajusta com zoom
+	ctx.strokeStyle = body.gradient.one; // Gradient color with low alpha (51% transparent)
+	ctx.lineWidth = Math.max(0.5, 1 / scale); // Thin line, adjusts with zoom
 	ctx.lineCap = 'round';
 	ctx.lineJoin = 'round';
 	ctx.beginPath();
 
 	let first = true;
 
-	// Desenha órbita estática se existir
+	// Draws static orbit if it exists
 	if (body.orbit) {
 		body.orbit.forEach((point) => {
 			const px = point.x * gridSize;
@@ -92,10 +92,10 @@ export function drawTrail(
 				ctx.lineTo(px, py);
 			}
 		});
-		ctx.closePath(); // Fecha elipse para planetas
+		ctx.closePath(); // Closes ellipse for planets
 	}
 
-	// Ou desenha trail dinâmico se existir (para cometas)
+	// Or draws dynamic trail if it exists (for comets)
 	if (body.trail && body.trail.length > 1) {
 		body.trail.forEach((point, index) => {
 			const px = point.x * gridSize;

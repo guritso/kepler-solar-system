@@ -221,10 +221,10 @@ ceres.orbitalElements = ceresEl;
 const atlas: Body = {
 	name: '3I/ATLAS',
 	radius: sun.radius * 0.0005,
-	x: -260.8,
-	y: -412.8,
-	vx: -3.24e-5,
-	vy: 8.91e-5,
+	x: -280.5,
+	y: -395.2,
+	vx: -4.85e-5,
+	vy: 7.23e-5,
 	mass: 1e13,
 	gradient: {
 		one: 'rgb(200, 200, 255)',
@@ -236,20 +236,21 @@ const atlas: Body = {
 
 
 const halley: Body = {
-	name: '1I/Halley',
-	radius: sun.radius * 0.0004,
-	x: 150.2,
-	y: 320.5,
-	vx: 2.15e-5,
-	vy: -1.23e-5,
-	mass: 2.2e14,
-	gradient: {
-		one: 'rgb(255, 150, 200)',
-		two: 'rgba(200, 50, 150, 0.6)'
-	},
-	trail: [],
-	isComet: true
-}
+    name: '1P/Halley',
+    radius: sun.radius * 0.0004,
+    x: -4080.0,
+    y: 6000.0,
+    vx: -8.5e-6 * 0.1,
+    vy: -1.2e-5 * 0.1,
+    mass: 2.2e14,
+    gradient: {
+        one: 'rgb(255, 150, 200)',
+        two: 'rgba(200, 50, 150, 0.6)'
+    },
+    trail: [],
+    isComet: true
+};
+
 
 export const bodies: Body[] = [
 	sun,

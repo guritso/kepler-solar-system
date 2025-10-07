@@ -6,13 +6,32 @@
 		$timeScale = $timeScale === 0 ? 1 : 0;
 	}
 	function accelerate() {
-		if ($timeScale < Infinity) {
+		if ($timeScale === -1) {
+			$timeScale = 1;
+			return;
+		}
+
+		if ($timeScale < 0) {
+			$timeScale /= 10;
+			return;
+		}
+
+		$timeScale *= 10;
+	}
+
+	function decelerate() {
+		if ($timeScale < 0) {
 			$timeScale *= 10;
+			return;
+		}
+
+		if ($timeScale > 1) {
+			$timeScale /= 10;
+		} else {
+			$timeScale = -1;
 		}
 	}
-	function decelerate() {
-		$timeScale /= 10;
-	}
+
 	function resetSimulation() {
 		$timeScale = 1;
 		simulationTime.set(Date.now());
@@ -25,7 +44,9 @@
 
 	// Format time for display
 	let formattedTime = $derived(new Date($simulationTime).toLocaleString());
-	let acceleration = $derived($timeScale === 0 ? 'Paused' : `${$timeScale}x`);
+	let acceleration = $derived(
+		$timeScale === 0 ? 'Paused' : $timeScale > 0 ? `${$timeScale}x` : `-${Math.abs($timeScale)}x`
+	);
 </script>
 
 <div

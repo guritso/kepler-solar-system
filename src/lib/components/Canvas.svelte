@@ -18,7 +18,6 @@
 	let offsetX = $state(0);
 	let offsetY = $state(0);
 	let scale = $state(0.1);
-	let gridSize = $state(20);
 	let isDragging = false;
 	let startX: number, startY: number;
 
@@ -90,11 +89,11 @@
 		draw(); // Redraw
 		// center on selected body
 		if ($selectedBody) {
-			const targetOffsetX = -scale * $selectedBody.x * gridSize;
-			const targetOffsetY = -scale * $selectedBody.y * gridSize;
+			const targetOffsetX = -scale * $selectedBody.x ;
+			const targetOffsetY = -scale * $selectedBody.y;
 
 			// Lerp for smooth transition if needed (optional: set lerp=0.1 for easing)
-			const lerp = 0.5; // m snap
+			const lerp = 1; // m snap
 			offsetX += (targetOffsetX - offsetX) * lerp;
 			offsetY += (targetOffsetY - offsetY) * lerp;
 		}
@@ -110,34 +109,39 @@
 		ctx.scale(scale, scale);
 
 		$bodies.forEach((body: Body) => {
-			drawTrail(ctx, body, gridSize, scale); // Nova linha: desenha órbitas/trails
+			drawTrail(ctx, body, scale); // Nova linha: desenha órbitas/trails
 		});
 
 		$bodies.forEach((body: Body) => {
-			const gradient = ctx.createRadialGradient(
-				body.x * gridSize,
-				body.y * gridSize,
-				0,
-				body.x * gridSize,
-				body.y * gridSize,
-				body.radius
-			);
-			gradient.addColorStop(0, body.gradient.one);
-			gradient.addColorStop(1, body.gradient.two);
+			ctx.save(); // Save state for per-body transform
+
+			// Translate to body's world position (float precise, no rounding to avoid jitter)
+			const px = body.x;
+			const py = body.y;
+			ctx.translate(px, py);
+
+			// Create radial gradient centered at (0,0) after translate
+			const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, body.radius);
+			gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Bright white core for glow
+			gradient.addColorStop(0.3, body.gradient.one); // Inner body color
+			gradient.addColorStop(0.7, body.gradient.two); // Outer body color
+			gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Fade to transparent
+
 			ctx.fillStyle = gradient;
 			ctx.beginPath();
-			ctx.arc(body.x * gridSize, body.y * gridSize, body.radius, 0, Math.PI * 2);
+			ctx.arc(0, 0, body.radius, 0, 2 * Math.PI); // Main body circle (world units)
 			ctx.fill();
+			ctx.restore(); // Restore to global transform
 
 			if ($showTag) {
 				ctx.fillStyle = 'white';
 				ctx.font = `${12 / scale}px Arial`;
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText(body.name, body.x * gridSize + body.radius * 2, body.y * gridSize);
+				ctx.fillText(body.name, body.x + body.radius * 2, body.y);
 			}
 		});
-		ctx.restore();
+		ctx.restore(); // Restore to pre-scale/translate
 	}
 	// pan events
 	function pointerdown(event: PointerEvent) {
@@ -161,8 +165,8 @@
 
 		$bodies.forEach((body) => {
 			// Convert body world coordinates to screen (pixel) coordinates
-			const bodyScreenX = canvas.width / 2 + offsetX + scale * (body.x * gridSize);
-			const bodyScreenY = canvas.height / 2 + offsetY + scale * (body.y * gridSize);
+			const bodyScreenX = canvas.width / 2 + offsetX + scale * (body.x);
+			const bodyScreenY = canvas.height / 2 + offsetY + scale * (body.y);
 
 			const dx = bodyScreenX - clickClientX;
 			const dy = bodyScreenY - clickClientY;
@@ -201,8 +205,8 @@
 	function wheel(event: WheelEvent) {
 		event.preventDefault();
 
-		const zoomSpeed = 0.1;
 		const oldScale = scale;
+		const zoomSpeed = 0.1;
 
 		scale *= event.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
 		scale = Math.max(farthestZoom, Math.min(scale, closestZoom)); // limit zoom
@@ -224,10 +228,10 @@
 	}
 	// coordinates of the cursor and center
 	function pointermove(event: PointerEvent) {
-		cursorX = (event.clientX - canvas.width / 2 - offsetX) / (scale * gridSize);
-		cursorY = (event.clientY - canvas.height / 2 - offsetY) / (scale * gridSize);
-		centerX = -offsetX / (scale * gridSize);
-		centerY = -offsetY / (scale * gridSize);
+		cursorX = (event.clientX - canvas.width / 2 - offsetX) / scale;
+		cursorY = (event.clientY - canvas.height / 2 - offsetY) / scale;
+		centerX = -offsetX / scale;
+		centerY = -offsetY / scale;
 
 		if (isDragging) {
 			event.preventDefault();

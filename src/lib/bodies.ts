@@ -1,6 +1,7 @@
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
 import { computeOrbitPoints } from './trails';
+import { AU_TO_SIM } from "./stores"
 
 export interface Body {
 	name: string;
@@ -20,7 +21,6 @@ export interface Body {
 	isComet?: boolean; // Flag: true for comets (trail instead of orbit line)
 }
 
-const AU_TO_SIM = 215;
 const DAY_TO_SEC = 86400;
 
 function fromOrbital(

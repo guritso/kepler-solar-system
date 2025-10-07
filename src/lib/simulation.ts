@@ -1,8 +1,8 @@
 import { keplerToCartesian } from './kepler';
 import type { Body } from './bodies';
 import { updateDynamicTrail } from './trails';
+import { AU_TO_SIM } from "./stores"
 
-const AU_TO_SIM = 215;
 const DAY_TO_SEC = 86400;
 const GM_sun = 3.94e-7; // only for cometa
 

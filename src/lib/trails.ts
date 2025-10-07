@@ -1,8 +1,8 @@
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
 import type { Body } from './bodies';
+import { AU_TO_SIM } from './stores';
 
-const AU_TO_SIM = 215; // Mesmo valor de bodies.ts
 const mu = 0.01720209895 ** 2; // Gravitational constant (GM scaled for your units)
 
 /**
@@ -14,22 +14,28 @@ const mu = 0.01720209895 ** 2; // Gravitational constant (GM scaled for your uni
  */
 export function computeOrbitPoints(
 	elements: OrbitalElements,
-	numPoints: number = 360
+	numPoints: number = 360  // Default for small orbits
 ): { x: number; y: number }[] {
+	// Adaptive sampling: more points for larger/more eccentric orbits to avoid distortion at high zoom
+	const basePoints = 360;
+	const sizeFactor = Math.max(1, elements.a / 5);  // Scale by semi-major axis (e.g., Jupiter=5AU -> 1x, Pluto=39AU -> ~8x)
+	const eccFactor = Math.max(1, elements.e * 10);  // Extra points for eccentricity (tight curves)
+	const adaptivePoints = Math.min(basePoints * sizeFactor * eccFactor, 5000);  // Cap at 5000 for perf
+
 	const points: { x: number; y: number }[] = [];
-	const now = Date.now(); // Current time (as in fromOrbital)
+	const now = Date.now();
 
 	let currentM =
 		elements.M +
 		(((Math.sqrt(mu / Math.pow(elements.a, 3)) * (now - elements.epoch)) / 86400000) * 180) /
-			Math.PI; // Current M in degrees
+			Math.PI;
 	currentM = ((currentM % 360) + 360) % 360;
 
-	for (let i = 0; i < numPoints; i++) {
-		const deltaM = (i / numPoints) * 360 - 180; // Varies from -180° to +180° from current (full loop)
+	for (let i = 0; i < adaptivePoints; i++) {  // Use adaptivePoints instead of numPoints
+		const deltaM = (i / adaptivePoints) * 360 - 180;
 		const M_deg = (currentM + deltaM + 360) % 360;
 		const tempElements = { ...elements, M: M_deg };
-		const state = keplerToCartesian(tempElements, now); // At current time
+		const state = keplerToCartesian(tempElements, now);
 
 		points.push({
 			x: state.x * AU_TO_SIM,
@@ -67,7 +73,6 @@ export function updateDynamicTrail(body: Body, maxLength: number = 1000) {
 export function drawTrail(
 	ctx: CanvasRenderingContext2D,
 	body: Body,
-	gridSize: number,
 	scale: number
 ) {
 	if (!body.orbit && !body.trail) return;
@@ -83,8 +88,8 @@ export function drawTrail(
 	// Draws static orbit if it exists
 	if (body.orbit) {
 		body.orbit.forEach((point) => {
-			const px = point.x * gridSize;
-			const py = point.y * gridSize;
+			const px = point.x;
+			const py = point.y;
 			if (first) {
 				ctx.moveTo(px, py);
 				first = false;
@@ -98,8 +103,8 @@ export function drawTrail(
 	// Or draws dynamic trail if it exists (for comets)
 	if (body.trail && body.trail.length > 1) {
 		body.trail.forEach((point, index) => {
-			const px = point.x * gridSize;
-			const py = point.y * gridSize;
+			const px = point.x;
+			const py = point.y;
 			if (index === 0) {
 				ctx.moveTo(px, py);
 			} else {

@@ -73,7 +73,7 @@ export function drawTrail(
 	if (!body.orbit && !body.trail) return;
 
 	ctx.strokeStyle = body.gradient.one; // Gradient color with low alpha (51% transparent)
-	ctx.lineWidth = Math.max(0.5, 1 / scale); // Thin line, adjusts with zoom
+	ctx.lineWidth = Math.max(0, Math.min(0.5 / scale)); // Thin line, adjusts with zoom
 	ctx.lineCap = 'round';
 	ctx.lineJoin = 'round';
 	ctx.beginPath();

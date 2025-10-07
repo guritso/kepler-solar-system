@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Play, Pause, FastForward, Rewind, TimerReset, Tag } from 'lucide-svelte';
-	import { timeScale, showTag, simulationTime, resetTime } from '$lib/stores';
+	import { timeScale, showTag, simulationTime, resetTime, resetBodies } from '$lib/stores';
 
 	function togglePause() {
 		$timeScale = $timeScale === 0 ? 1 : 0;
@@ -17,6 +17,7 @@
 		$timeScale = 1;
 		simulationTime.set(Date.now());
 		resetTime.set(true);
+		resetBodies();
 	}
 	function showtag() {
 		$showTag = !$showTag;

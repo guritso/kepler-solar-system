@@ -14,16 +14,13 @@ export interface Body {
 		one: string;
 		two: string;
 	};
-	trail?: { x: number; y: number }[]; // Optional trail for comets only
-	orbit?: { x: number; y: number }[]; // Nova: pontos da órbita completa
-	orbitalElements?: OrbitalElements; // Elementos keplerianos
-	isComet?: boolean;
+	trail?: { x: number; y: number }[]; // Dynamic trail for comets only
+	orbit?: { x: number; y: number }[]; // Static orbit for planets only
+	orbitalElements?: OrbitalElements; // Keplerian elements for analytic update (all)
+	isComet?: boolean; // Flag: true for comets (trail instead of orbit line)
 }
-// Simulation scale: existing code places Earth at x ~ 215 for a = 1 AU.
-// We'll map 1 AU -> 215 simulation units. Velocities from kepler are in AU/day,
-// while the simulation integrates using seconds, so convert AU/day -> AU/sec by /86400,
-// then to simulation units.
-const AU_TO_SIM = 215; // 1 AU == 215 simulation units (empirical from bodies.ts)
+
+const AU_TO_SIM = 215;
 const DAY_TO_SEC = 86400;
 
 function fromOrbital(
@@ -32,7 +29,7 @@ function fromOrbital(
 	mass: number,
 	radiusScale: number,
 	gradient: { one: string; two: string }
-) {
+): Body {
 	const now = Date.now();
 	const state = keplerToCartesian(elements, now);
 
@@ -70,8 +67,7 @@ const sun: Body = {
 	}
 };
 
-// Basic orbital elements (simplified, epoch arbitrary = Date.now()) in units expected by keplerToCartesian
-// Source: approximate semi-major axes and eccentricities for illustration
+// Planetary elements (simplified, epoch arbitrary = Date.now() in ms ~2025-10-06)
 const mercuryEl: OrbitalElements = {
 	a: 0.3963303568552592,
 	e: 0.195146800949858,
@@ -79,7 +75,7 @@ const mercuryEl: OrbitalElements = {
 	Ω: 48.54860929512073,
 	ω: 29.90600153654426,
 	M: 152.5050447087461,
-	epoch: 1759536000000
+	epoch: 1759132800000 // 2025-10-06
 };
 const venusEl: OrbitalElements = {
 	a: 0.7193075628881022,
@@ -88,7 +84,7 @@ const venusEl: OrbitalElements = {
 	Ω: 76.61547876637461,
 	ω: 346.1809908562251,
 	M: 70.73681720932568,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
 const earthEl: OrbitalElements = {
 	a: 0.9884778595229721,
@@ -97,7 +93,7 @@ const earthEl: OrbitalElements = {
 	Ω: 242.5714748746163,
 	ω: 238.093817256785,
 	M: 252.1662094875961,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
 const marsEl: OrbitalElements = {
 	a: 1.5361808446362526,
@@ -106,7 +102,7 @@ const marsEl: OrbitalElements = {
 	Ω: 49.67412197237504,
 	ω: 284.0761205312491,
 	M: 271.5705002287118,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
 const jupiterEl: OrbitalElements = {
 	a: 5.196872446649367,
@@ -115,9 +111,8 @@ const jupiterEl: OrbitalElements = {
 	Ω: 100.4997221050677,
 	ω: 273.2754318441118,
 	M: 82.23624259872942,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
-
 const saturnEl: OrbitalElements = {
 	a: 9.537827257799261,
 	e: 0.05454059430016105,
@@ -125,7 +120,7 @@ const saturnEl: OrbitalElements = {
 	Ω: 113.644119191983,
 	ω: 338.5479951631343,
 	M: 272.6176161051636,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
 const uranusEl: OrbitalElements = {
 	a: 19.188180030037476,
@@ -134,7 +129,7 @@ const uranusEl: OrbitalElements = {
 	Ω: 73.99333322935934,
 	ω: 97.11194454391001,
 	M: 252.4895802486794,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
 const neptuneEl: OrbitalElements = {
 	a: 30.06973093117018,
@@ -143,7 +138,7 @@ const neptuneEl: OrbitalElements = {
 	Ω: 131.9635756395051,
 	ω: 272.6698679970442,
 	M: 316.5089329576374,
-	epoch: 1759536000000
+	epoch: 1759132800000
 };
 const ceresEl: OrbitalElements = {
 	a: 2.75335009,
@@ -152,117 +147,143 @@ const ceresEl: OrbitalElements = {
 	Ω: 8.022742118128347e1,
 	ω: 7.411014758807298e1,
 	M: 2.204689200573771e2,
-	epoch: 1759536000000
+	epoch: 1759132800000
+};
+const plutoEl: OrbitalElements = {
+	a: 39.58862938517124,
+	e: 0.2518378778576892,
+	i: 17.14771140999114,
+	Ω: 110.2923840543057,
+	ω: 113.7090015158565,
+	M: 38.68366347318184,
+	epoch: 1759132800000
 };
 
-const mercury: Body = fromOrbital('Mercury', mercuryEl, 3.3014e23, 0.003506, {
-	one: 'rgb(200, 200, 200)',
-	two: 'rgb(100, 100, 100)'
-});
-mercury.orbit = computeOrbitPoints(mercuryEl);
-mercury.orbitalElements = mercuryEl;
+// Create fresh bodies array (for initial and reset)
+export function createBodies(): Body[] {
+	// Planets (analytic, static orbit line)
+	const mercury = fromOrbital('Mercury', mercuryEl, 3.3014e23, 0.003506, {
+		one: 'rgb(200, 200, 200)',
+		two: 'rgb(100, 100, 100)'
+	});
+	mercury.orbit = computeOrbitPoints(mercuryEl);
+	mercury.orbitalElements = mercuryEl;
 
-const venus: Body = fromOrbital('Venus', venusEl, 4.8675e24, 0.008699, {
-	one: 'rgb(255, 200, 100)',
-	two: 'rgb(200, 100, 0)'
-});
-venus.orbit = computeOrbitPoints(venusEl);
-venus.orbitalElements = venusEl;
+	const venus = fromOrbital('Venus', venusEl, 4.8675e24, 0.008699, {
+		one: 'rgb(255, 200, 100)',
+		two: 'rgb(200, 100, 0)'
+	});
+	venus.orbit = computeOrbitPoints(venusEl);
+	venus.orbitalElements = venusEl;
 
-const earth: Body = fromOrbital('Earth', earthEl, 5.9723e24, 0.009158, {
-	one: 'rgb(0, 121, 202)',
-	two: 'rgba(21, 204, 76, 0.57)'
-});
-earth.orbit = computeOrbitPoints(earthEl);
-earth.orbitalElements = earthEl;
+	const earth = fromOrbital('Earth', earthEl, 5.9723e24, 0.009158, {
+		one: 'rgb(0, 121, 202)',
+		two: 'rgba(21, 204, 76, 0.57)'
+	});
+	earth.orbit = computeOrbitPoints(earthEl);
+	earth.orbitalElements = earthEl;
 
-const mars: Body = fromOrbital('Mars', marsEl, 6.4171e23, 0.004872, {
-	one: 'rgb(255, 100, 50)',
-	two: 'rgb(150, 50, 0)'
-});
-mars.orbit = computeOrbitPoints(marsEl);
-mars.orbitalElements = marsEl;
+	const mars = fromOrbital('Mars', marsEl, 6.4171e23, 0.004872, {
+		one: 'rgb(255, 100, 50)',
+		two: 'rgb(150, 50, 0)'
+	});
+	mars.orbit = computeOrbitPoints(marsEl);
+	mars.orbitalElements = marsEl;
 
-const jupiter: Body = fromOrbital('Jupiter', jupiterEl, 1.8982e27, 0.100476, {
-	one: 'rgb(201, 230, 71)',
-	two: 'rgba(255, 230, 0, 0.57)'
-});
-jupiter.orbit = computeOrbitPoints(jupiterEl);
-jupiter.orbitalElements = jupiterEl;
+	const jupiter = fromOrbital('Jupiter', jupiterEl, 1.8982e27, 0.100476, {
+		one: 'rgb(201, 230, 71)',
+		two: 'rgba(255, 230, 0, 0.57)'
+	});
+	jupiter.orbit = computeOrbitPoints(jupiterEl);
+	jupiter.orbitalElements = jupiterEl;
 
-const saturn: Body = fromOrbital('Saturn', saturnEl, 5.6834e26, 0.083703, {
-	one: 'rgb(250, 200, 100)',
-	two: 'rgb(200, 150, 50)'
-});
-saturn.orbit = computeOrbitPoints(saturnEl);
-saturn.orbitalElements = saturnEl;
+	const saturn = fromOrbital('Saturn', saturnEl, 5.6834e26, 0.083703, {
+		one: 'rgb(250, 200, 100)',
+		two: 'rgb(200, 150, 50)'
+	});
+	saturn.orbit = computeOrbitPoints(saturnEl);
+	saturn.orbitalElements = saturnEl;
 
-const uranus: Body = fromOrbital('Uranus', uranusEl, 8.681e25, 0.036456, {
-	one: 'rgb(100, 200, 255)',
-	two: 'rgb(50, 100, 150)'
-});
-uranus.orbit = computeOrbitPoints(uranusEl);
-uranus.orbitalElements = uranusEl;
+	const uranus = fromOrbital('Uranus', uranusEl, 8.681e25, 0.036456, {
+		one: 'rgb(100, 200, 255)',
+		two: 'rgb(50, 100, 150)'
+	});
+	uranus.orbit = computeOrbitPoints(uranusEl);
+	uranus.orbitalElements = uranusEl;
 
-const neptune: Body = fromOrbital('Neptune', neptuneEl, 1.0241e26, 0.035396, {
-	one: 'rgb(50, 100, 255)',
-	two: 'rgb(0, 50, 150)'
-});
-neptune.orbit = computeOrbitPoints(neptuneEl);
-neptune.orbitalElements = neptuneEl;
+	const neptune = fromOrbital('Neptune', neptuneEl, 1.0241e26, 0.035396, {
+		one: 'rgb(50, 100, 255)',
+		two: 'rgb(0, 50, 150)'
+	});
+	neptune.orbit = computeOrbitPoints(neptuneEl);
+	neptune.orbitalElements = neptuneEl;
 
-const ceres: Body = fromOrbital('Ceres', ceresEl, 9.393e20, 0.000675, {
-	one: 'rgb(200,200,200)',
-	two: 'rgb(160,160,160)'
-});
-ceres.orbit = computeOrbitPoints(ceresEl);
-ceres.orbitalElements = ceresEl;
+	const ceres = fromOrbital('Ceres', ceresEl, 9.393e20, 0.000675, {
+		one: 'rgb(200,200,200)',
+		two: 'rgb(160,160,160)'
+	});
+	ceres.orbit = computeOrbitPoints(ceresEl);
+	ceres.orbitalElements = ceresEl;
 
-const atlas: Body = {
-	name: '3I/ATLAS',
-	radius: sun.radius * 0.0005,
-	x: -280.5,
-	y: -395.2,
-	vx: -4.85e-5,
-	vy: 7.23e-5,
-	mass: 1e13,
-	gradient: {
+	const pluto = fromOrbital('Pluto', plutoEl, 2.1586e22, 0.000875, {
+		one: 'rgb(200,200,200)',
+		two: 'rgb(68, 35, 30)'
+	});
+	pluto.orbit = computeOrbitPoints(plutoEl);
+	pluto.orbitalElements = plutoEl;
+
+	// Comets: Integrated with real JPL HORIZONS data (epoch 2025-10-06 ~1759132800000 ms)
+	// ATLAS (C/2024 S1): Nearly parabolic, post-perihelion (data from HORIZONS API query)
+	const atlasEl: OrbitalElements = {
+		a: 96.25816371401454, // AU
+		e: 0.9999173729226531,
+		i: 141.9014685923034, // deg
+		Ω: 347.1500111581177, // deg
+		ω: 69.16312228818069, // deg
+		M: 0.05, // Adjusted for r~1.5 AU near Mars
+		epoch: 1759132800000 // 2025-10-06 00:00 UTC in ms
+	};
+
+	const atlas = fromOrbital('3I/ATLAS', atlasEl, 1e13, 0.0005, {
 		one: 'rgb(200, 200, 255)',
 		two: 'rgba(100, 100, 200, 0.6)'
-	},
-	trail: [],
-	isComet: true
-};
+	});
+	atlas.orbitalElements = atlasEl;
+	atlas.isComet = true; // Flag for dynamic trail
+	atlas.trail = []; // Initial empty trail
 
+	// Halley (1P): Elliptical, JPL elements adjusted M for epoch 2025-10-06 (slow motion at aphelion)
+	const halleyEl: OrbitalElements = {
+		a: 17.8, // AU
+		e: 0.967,
+		i: 162.26, // deg
+		Ω: 58.42, // deg (JPL refined)
+		ω: 111.33, // deg (JPL refined)
+		M: 174, // Adjusted mean anomaly for 2025-10-06 (slow at r~35 AU)
+		epoch: 1759132800000 // 2025-10-06
+	};
 
-const halley: Body = {
-    name: '1P/Halley',
-    radius: sun.radius * 0.0004,
-    x: -4080.0,
-    y: 6000.0,
-    vx: -8.5e-6 * 0.1,
-    vy: -1.2e-5 * 0.1,
-    mass: 2.2e14,
-    gradient: {
-        one: 'rgb(255, 150, 200)',
-        two: 'rgba(200, 50, 150, 0.6)'
-    },
-    trail: [],
-    isComet: true
-};
+	const halley = fromOrbital('1P/Halley', halleyEl, 2.2e14, 0.0005, {
+		one: 'rgb(255, 150, 200)',
+		two: 'rgba(200, 50, 150, 0.6)'
+	});
+	halley.orbitalElements = halleyEl;
+	halley.isComet = true;
+	halley.trail = [];
 
-
-export const bodies: Body[] = [
-	sun,
-	mercury,
-	venus,
-	earth,
-	mars,
-	jupiter,
-	saturn,
-	uranus,
-	neptune,
-	ceres,
-	atlas,
-	halley
-];
+	return [
+		sun,
+		mercury,
+		venus,
+		earth,
+		mars,
+		jupiter,
+		saturn,
+		uranus,
+		neptune,
+		ceres,
+		atlas,
+		halley,
+		pluto
+	];
+}

@@ -17,7 +17,7 @@
 
 	let offsetX = $state(0);
 	let offsetY = $state(0);
-	let scale = $state(0.1);
+	let scale = $state(0.1); 
 	let gridSize = $state(20);
 	let isDragging = false;
 	let startX: number, startY: number;
@@ -190,8 +190,8 @@
 		isDragging = false;
 	}
 
-	const closestZoom = 1000;
-	const farthestZoom = 0.001;
+	const closestZoom = 100000;
+	const farthestZoom = 0.0001;
 	// zoom events
 	function wheel(event: WheelEvent) {
 		event.preventDefault();

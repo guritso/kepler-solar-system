@@ -9,12 +9,10 @@ const mu = 0.01720209895 ** 2; // Gravitational constant (GM scaled for your uni
  * Calculates points along the complete orbit (uniform sampling by mean anomaly).
  * For planets: closed ellipse. For hyperbolic comets: open arc.
  * @param elements - Keplerian elements
- * @param numPoints - Number of points (more = smoother, default 360 for 1° per point)
  * @returns Array of {x, y} in simulation units
  */
 export function computeOrbitPoints(
-	elements: OrbitalElements,
-	numPoints: number = 360  // Default for small orbits
+	elements: OrbitalElements
 ): { x: number; y: number }[] {
 	// Adaptive sampling: more points for larger/more eccentric orbits to avoid distortion at high zoom
 	const basePoints = 360;
@@ -23,19 +21,12 @@ export function computeOrbitPoints(
 	const adaptivePoints = Math.min(basePoints * sizeFactor * eccFactor, 5000);  // Cap at 5000 for perf
 
 	const points: { x: number; y: number }[] = [];
-	const now = Date.now();
-
-	let currentM =
-		elements.M +
-		(((Math.sqrt(mu / Math.pow(elements.a, 3)) * (now - elements.epoch)) / 86400000) * 180) /
-			Math.PI;
-	currentM = ((currentM % 360) + 360) % 360;
-
-	for (let i = 0; i < adaptivePoints; i++) {  // Use adaptivePoints instead of numPoints
-		const deltaM = (i / adaptivePoints) * 360 - 180;
-		const M_deg = (currentM + deltaM + 360) % 360;
+	// FIXED: Use fixed time (elements.epoch) for t=0, sample M directly from 0-360 for timeless orbit shape
+	// This ensures positions always lie exactly on the precomputed points, no time drift/jitter
+	for (let i = 0; i < adaptivePoints; i++) {
+		const M_deg = (i / adaptivePoints) * 360;  // Direct uniform sampling over full mean anomaly
 		const tempElements = { ...elements, M: M_deg };
-		const state = keplerToCartesian(tempElements, now);
+		const state = keplerToCartesian(tempElements, elements.epoch);  // t=0, consistent with analytic updates
 
 		points.push({
 			x: state.x * AU_TO_SIM,
@@ -52,11 +43,13 @@ export function computeOrbitPoints(
  * @param maxLength - Maximum points in trail (default 1000 for performance)
  */
 export function updateDynamicTrail(body: Body, maxLength: number = 1000) {
+	const px = Math.round(body.x * 1e6) / 1e6;
+	const py = Math.round(body.y * 1e6) / 1e6;
 	if (!body.trail) {
 		body.trail = [];
 	}
 
-	body.trail.push({ x: body.x, y: body.y });
+	body.trail.push({ x: px, y: py });
 
 	// Limits length to avoid excessive memory usage
 	if (body.trail.length > maxLength) {

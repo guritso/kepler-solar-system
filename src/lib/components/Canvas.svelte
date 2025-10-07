@@ -93,7 +93,7 @@
 			const targetOffsetY = -scale * $selectedBody.y;
 
 			// Lerp for smooth transition if needed (optional: set lerp=0.1 for easing)
-			const lerp = 1; // m snap
+			const lerp = 0.8; // m snap
 			offsetX += (targetOffsetX - offsetX) * lerp;
 			offsetY += (targetOffsetY - offsetY) * lerp;
 		}
@@ -116,8 +116,8 @@
 			ctx.save(); // Save state for per-body transform
 
 			// Translate to body's world position (float precise, no rounding to avoid jitter)
-			const px = body.x;
-			const py = body.y;
+			const px = Math.round(body.x * 1e6) / 1e6;
+			const py = Math.round(body.y * 1e6) / 1e6;
 			ctx.translate(px, py);
 
 			// Create radial gradient centered at (0,0) after translate
@@ -138,7 +138,7 @@
 				ctx.font = `${12 / scale}px Arial`;
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
-				ctx.fillText(body.name, body.x + body.radius * 2, body.y);
+				ctx.fillText(body.name, px + body.radius * 2, py);
 			}
 		});
 		ctx.restore(); // Restore to pre-scale/translate

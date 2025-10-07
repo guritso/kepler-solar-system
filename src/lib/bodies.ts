@@ -18,7 +18,7 @@ export interface Body {
 	trail?: { x: number; y: number }[]; // Dynamic trail for comets only
 	orbit?: { x: number; y: number }[]; // Static orbit for planets only
 	orbitalElements?: OrbitalElements; // Keplerian elements for analytic update (all)
-	isComet?: boolean; // Flag: true for comets (trail instead of orbit line)
+	isSmall?: boolean; // Flag: true for small bodies
 }
 
 const DAY_TO_SEC = 86400;
@@ -240,8 +240,9 @@ export function createBodies(): Body[] {
 		one: 'rgb(200,200,200)',
 		two: 'rgb(160,160,160)'
 	});
-	ceres.orbit = computeOrbitPoints(ceresEl);
 	ceres.orbitalElements = ceresEl;
+	ceres.isSmall = true;
+	ceres.trail = []; 
 
 	const pluto = fromOrbital('Pluto', plutoEl, 1.303e22, 0.001708, {
 		one: 'rgb(200,200,200)',
@@ -249,7 +250,7 @@ export function createBodies(): Body[] {
 	});
 	//pluto.orbit = computeOrbitPoints(plutoEl);
 	pluto.orbitalElements = plutoEl;
-	pluto.isComet = true;
+	pluto.isSmall = true;
 	pluto.trail = []
 
 
@@ -259,7 +260,7 @@ export function createBodies(): Body[] {
 	});
 	//sedna.orbit = computeOrbitPoints(sednaEl);
 	sedna.orbitalElements = sednaEl;
-	sedna.isComet = true;
+	sedna.isSmall = true;
 	sedna.trail = []
 
 
@@ -268,8 +269,8 @@ export function createBodies(): Body[] {
 		two: 'rgba(100, 100, 200, 0.6)'
 	});
 	atlas.orbitalElements = atlasEl;
-	atlas.isComet = true; // Flag for dynamic trail
-	atlas.trail = []; // Initial empty trail
+	atlas.isSmall = true;
+	atlas.trail = []; 
 
 	return [
 		sun,

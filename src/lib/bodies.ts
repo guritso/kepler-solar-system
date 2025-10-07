@@ -158,6 +158,24 @@ const plutoEl: OrbitalElements = {
 	M: 38.68366347318184,
 	epoch: 2457588.5
 };
+const sednaEl: OrbitalElements = {
+	a: 549.5396510704963,
+	e: 0.8615456732,
+	i: 11.9261038261,
+	Ω: 144.4704621550,
+	ω: 310.9902088880,
+	M: 358.6088086366,
+	epoch: 1759708800000
+};
+const atlasEl: OrbitalElements = {
+	a: -0.26391591751781, // AU (negative for hyperbolic orbit)
+	e: 6.139587836355706, // hyperbolic eccentricity
+	i: 175.1131015287974, // deg
+	Ω: 322.1568699043938, // deg
+	ω: 128.0099421020839, // deg
+	M: -723.1822479798254, // deg (negative for hyperbolic)
+	epoch: 2460878.5  // 2025-10-06 00:00 UTC (Julian Date)
+};
 
 // Create fresh bodies array (for initial and reset)
 export function createBodies(): Body[] {
@@ -229,20 +247,21 @@ export function createBodies(): Body[] {
 		one: 'rgb(200,200,200)',
 		two: 'rgb(68, 35, 30)'
 	});
-	pluto.orbit = computeOrbitPoints(plutoEl);
+	//pluto.orbit = computeOrbitPoints(plutoEl);
 	pluto.orbitalElements = plutoEl;
+	pluto.isComet = true;
+	pluto.trail = []
 
-	// Comets: Integrated with real JPL HORIZONS data (epoch 2025-10-06 ~1759132800000 ms)
-	// ATLAS (C/2024 S1): Nearly parabolic, post-perihelion (data from HORIZONS API query)
-	const atlasEl: OrbitalElements = {
-		a: 96.25816371401454, // AU
-		e: 0.9999173729226531,
-		i: 141.9014685923034, // deg
-		Ω: 347.1500111581177, // deg
-		ω: 69.16312228818069, // deg
-		M: 0.05, // Adjusted for r~1.5 AU near Mars
-		epoch: 1759132800000 // 2025-10-06 00:00 UTC in ms
-	};
+
+	const sedna = fromOrbital('sedna', sednaEl, 1e13, 0.0005, {
+		one: 'rgb(201, 201, 235)',
+		two: 'rgba(100, 100, 139, 0.6)'
+	});
+	//sedna.orbit = computeOrbitPoints(sednaEl);
+	sedna.orbitalElements = sednaEl;
+	sedna.isComet = true;
+	sedna.trail = []
+
 
 	const atlas = fromOrbital('3I/ATLAS', atlasEl, 1e13, 0.0005, {
 		one: 'rgb(200, 200, 255)',
@@ -251,25 +270,6 @@ export function createBodies(): Body[] {
 	atlas.orbitalElements = atlasEl;
 	atlas.isComet = true; // Flag for dynamic trail
 	atlas.trail = []; // Initial empty trail
-
-	// Halley (1P): Elliptical, JPL elements adjusted M for epoch 2025-10-06 (slow motion at aphelion)
-	const halleyEl: OrbitalElements = {
-		a: 17.8, // AU
-		e: 0.967,
-		i: 162.26, // deg
-		Ω: 58.42, // deg (JPL refined)
-		ω: 111.33, // deg (JPL refined)
-		M: 174, // Adjusted mean anomaly for 2025-10-06 (slow at r~35 AU)
-		epoch: 1759132800000 // 2025-10-06
-	};
-
-	const halley = fromOrbital('1P/Halley', halleyEl, 2.2e14, 0.0005, {
-		one: 'rgb(255, 150, 200)',
-		two: 'rgba(200, 50, 150, 0.6)'
-	});
-	halley.orbitalElements = halleyEl;
-	halley.isComet = true;
-	halley.trail = [];
 
 	return [
 		sun,
@@ -283,7 +283,7 @@ export function createBodies(): Body[] {
 		neptune,
 		ceres,
 		atlas,
-		halley,
-		pluto
+		pluto,
+		sedna
 	];
 }

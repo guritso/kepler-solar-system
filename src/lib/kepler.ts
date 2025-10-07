@@ -22,66 +22,101 @@ export interface CartesianState {
  * Uses Newton-Raphson to solve Kepler's equation for eccentric anomaly.
  */
 export function keplerToCartesian(elements: OrbitalElements, now: number): CartesianState {
-	// Gaussian gravitational constant (k) squared -> μ = k^2 (units: AU^3 / day^2)
+	// Gaussian gravitational constant squared -> mu (AU^3 / day^2)
 	const mu = 0.01720209895 ** 2;
 
-	const t = (now - elements.epoch) / 86400000; // days since epoch
+	// --- epoch units: accept either Unix ms or Julian Date (JD) ---
+	let epochMs = elements.epoch;
+	if (Math.abs(epochMs) < 1e11) { // provável JD
+		epochMs = (epochMs - 2440587.5) * 86400000;
+	}
+	const tDays = (now - epochMs) / 86400000; // dias desde epoch
 
-	// Mean motion (rad/day)
-	const n = Math.sqrt(mu / Math.pow(elements.a, 3));
+	// orbital params
+	let a = elements.a;
+	const e = elements.e;
+	const toRad = (deg: number) => (deg * Math.PI) / 180;
 
-	// Mean anomaly at time now (radians)
-	let M = (elements.M * Math.PI) / 180 + n * t;
-	// Normalize M to [-PI, PI]
+	// normalize a for hyperbolic convention if needed
+	if (e > 1 && a > 0) a = -a;
+
+	// mean motion (usar abs(a)^3)
+	const n = Math.sqrt(mu / Math.abs(a * a * a));
+
+	// Mean anomaly at time now (rad)
+	let M = toRad(elements.M) + n * tDays;
 	M = ((M + Math.PI) % (2 * Math.PI)) - Math.PI;
 
-	// Solve Kepler's equation: M = E - e*sin(E) for E
-	const e = elements.e;
-	let E = M; // initial guess
-	if (Math.abs(e) < 0.8) {
-		E = M;
+	if (Math.abs(e - 1) < 1e-12) {
+		throw new Error('Parabolic orbits (e ~= 1) não suportadas.');
+	}
+
+	let nu = 0;
+	let r = 0;
+	let p = 0;
+
+	if (e < 1) {
+		// Eccentric anomaly E for ellipse
+		let E = (Math.abs(e) < 0.8) ? M : Math.PI;
+		for (let i = 0; i < 200; i++) {
+			const f = E - e * Math.sin(E) - M;
+			const fp = 1 - e * Math.cos(E);
+			const d = f / fp;
+			E -= d;
+			if (Math.abs(d) < 1e-14) break;
+		}
+		// corrected: usar sin(E/2), cos(E/2)
+		const sinE2 = Math.sin(E / 2);
+		const cosE2 = Math.cos(E / 2);
+		nu = 2 * Math.atan2(Math.sqrt(1 + e) * sinE2, Math.sqrt(1 - e) * cosE2);
+
+		p = a * (1 - e * e);
+		r = p / (1 + e * Math.cos(nu));
 	} else {
-		E = Math.PI;
+		// Hyperbolic: solve for H (hyperbolic anomaly)
+		// M = e*sinh(H) - H
+		// initial guess
+		let H = Math.asinh(M / e);
+		if (!isFinite(H)) H = Math.sign(M) * Math.log(2 * Math.abs(M) / e + 1.8);
+		for (let i = 0; i < 300; i++) {
+			const sinhH = Math.sinh(H);
+			const coshH = Math.cosh(H);
+			const f = e * sinhH - H - M;
+			const fp = e * coshH - 1;
+			const d = f / fp;
+			H -= d;
+			if (Math.abs(d) < 1e-14) break;
+		}
+		const sinhH2 = Math.sinh(H / 2);
+		const coshH2 = Math.cosh(H / 2);
+		nu = 2 * Math.atan2(Math.sqrt(e + 1) * sinhH2, Math.sqrt(e - 1) * coshH2);
+
+		p = a * (1 - e * e); // com a negativo e e>1 produz p>0
+		r = p / (1 + e * Math.cos(nu));
 	}
 
-	// Newton-Raphson
-	for (let iter = 0; iter < 50; iter++) {
-		const f = E - e * Math.sin(E) - M;
-		const fp = 1 - e * Math.cos(E);
-		const delta = f / fp;
-		E -= delta;
-		if (Math.abs(delta) < 1e-12) break;
-	}
+	// posição no plano orbital
+	const x_orb = r * Math.cos(nu);
+	const y_orb = r * Math.sin(nu);
 
-	// True anomaly components and distance
-	const cosE = Math.cos(E);
-	const sinE = Math.sin(E);
+	// velocidade no plano orbital (radial + transverse)
+	if (p <= 0) throw new Error('p (semi-latus rectum) invalid.');
+	const sqrt_mu_over_p = Math.sqrt(mu / p);
+	const vr = sqrt_mu_over_p * e * Math.sin(nu);
+	const vtheta = sqrt_mu_over_p * (1 + e * Math.cos(nu));
 
-	const a = elements.a;
-	const r = a * (1 - e * cosE);
+	const vx_orb = vr * Math.cos(nu) - vtheta * Math.sin(nu);
+	const vy_orb = vr * Math.sin(nu) + vtheta * Math.cos(nu);
 
-	// position in orbital plane (PQW frame)
-	const x_orb = a * (cosE - e);
-	const y_orb = a * Math.sqrt(Math.max(0, 1 - e * e)) * sinE;
+	// rotação PQW -> IJK
+	const Omega = toRad(elements.Ω);
+	const inc = toRad(elements.i);
+	const omega = toRad(elements.ω);
 
-	// velocity in orbital plane (AU/day)
-	const factor = Math.sqrt(mu * a) / r;
-	const vx_orb = -factor * sinE;
-	const vy_orb = factor * Math.sqrt(Math.max(0, 1 - e * e)) * cosE;
+	const cosO = Math.cos(Omega), sinO = Math.sin(Omega);
+	const cosi = Math.cos(inc), sini = Math.sin(inc);
+	const cosw = Math.cos(omega), sinw = Math.sin(omega);
 
-	// rotation to inertial frame using Ω, i, ω (all converted to radians)
-	const Omega = (elements.Ω * Math.PI) / 180;
-	const inc = (elements.i * Math.PI) / 180;
-	const omega = (elements.ω * Math.PI) / 180;
-
-	const cosO = Math.cos(Omega);
-	const sinO = Math.sin(Omega);
-	const cosi = Math.cos(inc);
-	const sini = Math.sin(inc);
-	const cosw = Math.cos(omega);
-	const sinw = Math.sin(omega);
-
-	// rotation matrix components
 	const R11 = cosO * cosw - sinO * sinw * cosi;
 	const R12 = -cosO * sinw - sinO * cosw * cosi;
 	const R21 = sinO * cosw + cosO * sinw * cosi;

@@ -28,7 +28,7 @@ export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
 
 	// numeric for comets
 	bodies.forEach((body) => {
-		if (!body.orbitalElements && dt > 0) { 
+		if (body.isComet && dt > 0) { 
 			const sun = bodies[0];
 			const fixedDt = 0.01; // Substep for precision
 			let substeps = Math.ceil(dt / fixedDt);

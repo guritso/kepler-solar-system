@@ -17,7 +17,7 @@
 
 	let offsetX = $state(0);
 	let offsetY = $state(0);
-	let scale = $state(0.1); 
+	let scale = $state(0.1);
 	let gridSize = $state(20);
 	let isDragging = false;
 	let startX: number, startY: number;
@@ -90,8 +90,13 @@
 		draw(); // Redraw
 		// center on selected body
 		if ($selectedBody) {
-			offsetX = -scale * $selectedBody.x * gridSize;
-			offsetY = -scale * $selectedBody.y * gridSize;
+			const targetOffsetX = -scale * $selectedBody.x * gridSize;
+			const targetOffsetY = -scale * $selectedBody.y * gridSize;
+
+			// Lerp for smooth transition if needed (optional: set lerp=0.1 for easing)
+			const lerp = 0.5; // m snap
+			offsetX += (targetOffsetX - offsetX) * lerp;
+			offsetY += (targetOffsetY - offsetY) * lerp;
 		}
 
 		animationId = requestAnimationFrame(animate);

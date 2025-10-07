@@ -89,7 +89,7 @@
 		draw(); // Redraw
 		// center on selected body
 		if ($selectedBody) {
-			const targetOffsetX = -scale * $selectedBody.x ;
+			const targetOffsetX = -scale * $selectedBody.x;
 			const targetOffsetY = -scale * $selectedBody.y;
 
 			// Lerp for smooth transition if needed (optional: set lerp=0.1 for easing)
@@ -122,10 +122,8 @@
 
 			// Create radial gradient centered at (0,0) after translate
 			const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, body.radius);
-			gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Bright white core for glow
-			gradient.addColorStop(0.3, body.gradient.one); // Inner body color
-			gradient.addColorStop(0.7, body.gradient.two); // Outer body color
-			gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Fade to transparent
+			gradient.addColorStop(0, body.gradient.one); // Inner body color
+			gradient.addColorStop(1, body.gradient.two); // Outer body color
 
 			ctx.fillStyle = gradient;
 			ctx.beginPath();
@@ -165,8 +163,8 @@
 
 		$bodies.forEach((body) => {
 			// Convert body world coordinates to screen (pixel) coordinates
-			const bodyScreenX = canvas.width / 2 + offsetX + scale * (body.x);
-			const bodyScreenY = canvas.height / 2 + offsetY + scale * (body.y);
+			const bodyScreenX = canvas.width / 2 + offsetX + scale * body.x;
+			const bodyScreenY = canvas.height / 2 + offsetY + scale * body.y;
 
 			const dx = bodyScreenX - clickClientX;
 			const dy = bodyScreenY - clickClientY;

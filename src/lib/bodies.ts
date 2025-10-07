@@ -156,7 +156,7 @@ const plutoEl: OrbitalElements = {
 	Ω: 110.2923840543057,
 	ω: 113.7090015158565,
 	M: 38.68366347318184,
-	epoch: 1759132800000
+	epoch: 2457588.5
 };
 
 // Create fresh bodies array (for initial and reset)
@@ -225,7 +225,7 @@ export function createBodies(): Body[] {
 	ceres.orbit = computeOrbitPoints(ceresEl);
 	ceres.orbitalElements = ceresEl;
 
-	const pluto = fromOrbital('Pluto', plutoEl, 2.1586e22, 0.000875, {
+	const pluto = fromOrbital('Pluto', plutoEl, 1.303e22, 0.001708, {
 		one: 'rgb(200,200,200)',
 		two: 'rgb(68, 35, 30)'
 	});

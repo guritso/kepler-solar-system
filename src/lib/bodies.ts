@@ -241,6 +241,7 @@ export function createBodies(): Body[] {
 		two: 'rgb(160,160,160)'
 	});
 	ceres.orbitalElements = ceresEl;
+	ceres.orbit = computeOrbitPoints(ceresEl);
 	ceres.isSmall = true;
 	ceres.trail = []; 
 
@@ -248,7 +249,7 @@ export function createBodies(): Body[] {
 		one: 'rgb(200,200,200)',
 		two: 'rgb(68, 35, 30)'
 	});
-	//pluto.orbit = computeOrbitPoints(plutoEl);
+	pluto.orbit = computeOrbitPoints(plutoEl);
 	pluto.orbitalElements = plutoEl;
 	pluto.isSmall = true;
 	pluto.trail = []
@@ -258,7 +259,7 @@ export function createBodies(): Body[] {
 		one: 'rgb(201, 201, 235)',
 		two: 'rgba(100, 100, 139, 0.6)'
 	});
-	//sedna.orbit = computeOrbitPoints(sednaEl);
+	sedna.orbit = computeOrbitPoints(sednaEl);
 	sedna.orbitalElements = sednaEl;
 	sedna.isSmall = true;
 	sedna.trail = []

@@ -87,15 +87,10 @@
 
 		bodies.set([...$bodies]); // Trigger reactivity
 		draw(); // Redraw
-		// center on selected body
+		// center on selected body (snap exactly, no lerp) to avoid drift at high speeds
 		if ($selectedBody) {
-			const targetOffsetX = -scale * $selectedBody.x;
-			const targetOffsetY = -scale * $selectedBody.y;
-
-			// Lerp for smooth transition if needed (optional: set lerp=0.1 for easing)
-			const lerp = 0.8; // m snap
-			offsetX += (targetOffsetX - offsetX) * lerp;
-			offsetY += (targetOffsetY - offsetY) * lerp;
+			offsetX = -scale * $selectedBody.x;
+			offsetY = -scale * $selectedBody.y;
 		}
 
 		animationId = requestAnimationFrame(animate);
@@ -115,9 +110,9 @@
 		$bodies.forEach((body: Body) => {
 			ctx.save(); // Save state for per-body transform
 
-			// Translate to body's world position (float precise, no rounding to avoid jitter)
-			const px = Math.round(body.x * 1e6) / 1e6;
-			const py = Math.round(body.y * 1e6) / 1e6;
+			// Translate to body's world position (no rounding to avoid stepping jitter)
+			const px = body.x;
+			const py = body.y;
 			ctx.translate(px, py);
 
 			// Create radial gradient centered at (0,0) after translate

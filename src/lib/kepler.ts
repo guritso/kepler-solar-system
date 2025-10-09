@@ -43,9 +43,12 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	// mean motion (usar abs(a)^3)
 	const n = Math.sqrt(mu / Math.abs(a * a * a));
 
-	// Mean anomaly at time now (rad)
-	let M = toRad(elements.M) + n * tDays;
-	M = ((M + Math.PI) % (2 * Math.PI)) - Math.PI;
+    // Mean anomaly at time now (rad)
+    let M = toRad(elements.M) + n * tDays;
+	// For elliptical orbits, M is periodic (normalize). For hyperbolic orbits (e>1), do not normalize!
+    if (e < 1) {
+        M = ((M + Math.PI) % (2 * Math.PI)) - Math.PI;
+    }
 
 	if (Math.abs(e - 1) < 1e-12) {
 		throw new Error('Parabolic orbits (e ~= 1) não suportadas.');

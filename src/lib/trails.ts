@@ -11,27 +11,47 @@ const mu = 0.01720209895 ** 2; // Gravitational constant (GM scaled for your uni
  * @param elements - Keplerian elements
  * @returns Array of {x, y} in simulation units
  */
-export function computeOrbitPoints(
-	elements: OrbitalElements
-): { x: number; y: number }[] {
+export function computeOrbitPoints(elements: OrbitalElements): { x: number; y: number }[] {
 	// Adaptive sampling: more points for larger/more eccentric orbits to avoid distortion at high zoom
 	const basePoints = 360;
-	const sizeFactor = Math.max(1, elements.a / 5);  // Scale by semi-major axis (e.g., Jupiter=5AU -> 1x, Pluto=39AU -> ~8x)
-	const eccFactor = Math.max(1, elements.e * 10);  // Extra points for eccentricity (tight curves)
-	const adaptivePoints = Math.min(basePoints * sizeFactor * eccFactor, 5000);  // Cap at 5000 for perf
+	const sizeFactor = Math.max(1, elements.a / 5); // Scale by semi-major axis (e.g., Jupiter=5AU -> 1x, Pluto=39AU -> ~8x)
+	const eccFactor = Math.max(1, elements.e * 10); // Extra points for eccentricity (tight curves)
+	const adaptivePoints = Math.min(basePoints * sizeFactor * eccFactor, 5000); // Cap at 5000 for perf
 
 	const points: { x: number; y: number }[] = [];
-	// FIXED: Use fixed time (elements.epoch) for t=0, sample M directly from 0-360 for timeless orbit shape
-	// This ensures positions always lie exactly on the precomputed points, no time drift/jitter
-	for (let i = 0; i < adaptivePoints; i++) {
-		const M_deg = (i / adaptivePoints) * 360;  // Direct uniform sampling over full mean anomaly
-		const tempElements = { ...elements, M: M_deg };
-		const state = keplerToCartesian(tempElements, elements.epoch);  // t=0, consistent with analytic updates
+	const e = elements.e;
 
-		points.push({
-			x: state.x * AU_TO_SIM,
-			y: state.y * AU_TO_SIM
-		});
+	// For elliptical orbits (e<1): sample M uniformly 0..360° (closed)
+	if (e < 1) {
+		for (let i = 0; i < adaptivePoints; i++) {
+			const M_deg = (i / adaptivePoints) * 360;
+			const tempElements = { ...elements, M: M_deg };
+			const state = keplerToCartesian(tempElements, elements.epoch);
+			points.push({ x: state.x * AU_TO_SIM, y: state.y * AU_TO_SIM });
+		}
+		return points;
+	}
+
+	// For hyperbolic orbits (e>=1): generate open arc limited by asymptotes
+	// nu limit: cos(nu) = -1/e in asymptotes
+	const nuLimit = Math.acos(-1 / e) - 1e-4; // avoid division by zero
+	const steps = Math.max(200, Math.min(2000, Math.floor(adaptivePoints)));
+	const k = Math.sqrt((e - 1) / (e + 1)); // factor for H from nu
+	for (let i = 0; i < steps; i++) {
+		// scan from -nuLimit .. +nuLimit
+		const t = i / (steps - 1);
+		const nu = -nuLimit + t * (2 * nuLimit);
+		// H from nu: tanh(H/2) = k * tan(nu/2)
+		const tanNu2 = Math.tan(nu / 2);
+		const arg = k * tanNu2;
+		// slight clamp for numerical stability
+		const clamped = Math.max(-0.999999999999, Math.min(0.999999999999, arg));
+		const H = 2 * Math.atanh(clamped);
+		const M = e * Math.sinh(H) - H; // rad
+		const M_deg = (M * 180) / Math.PI;
+		const tempElements = { ...elements, M: M_deg };
+		const state = keplerToCartesian(tempElements, elements.epoch);
+		points.push({ x: state.x * AU_TO_SIM, y: state.y * AU_TO_SIM });
 	}
 
 	return points;
@@ -63,11 +83,7 @@ export function updateDynamicTrail(body: Body, maxLength: number = 1000) {
  * @param gridSize - Grid scale (from Canvas.svelte)
  * @param scale - Current scale (from Canvas.svelte)
  */
-export function drawTrail(
-	ctx: CanvasRenderingContext2D,
-	body: Body,
-	scale: number
-) {
+export function drawTrail(ctx: CanvasRenderingContext2D, body: Body, scale: number) {
 	if (!body.orbit && !body.trail) return;
 
 	ctx.strokeStyle = body.gradient.one; // Gradient color with low alpha (51% transparent)
@@ -90,7 +106,10 @@ export function drawTrail(
 				ctx.lineTo(px, py);
 			}
 		});
-		ctx.closePath(); // Closes ellipse for planets
+		// Close only elliptical orbits (e<1); hyperbolic orbits remain open
+		if (body.orbitalElements && body.orbitalElements.e < 1) {
+			ctx.closePath();
+		}
 	}
 
 	// Or draws dynamic trail if it exists (for comets)

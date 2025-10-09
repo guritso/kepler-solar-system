@@ -15,11 +15,12 @@
 	let canvas: HTMLCanvasElement;
 	let ctx: CanvasRenderingContext2D;
 
-	let offsetX = $state(0);
-	let offsetY = $state(0);
+	let cameraX = $state(0);
+	let cameraY = $state(0);
 	let scale = $state(0.1);
 	let isDragging = false;
 	let startX: number, startY: number;
+	let startCamX: number, startCamY: number;
 
 	let cursorX = $state(0);
 	let cursorY = $state(0);
@@ -87,10 +88,10 @@
 
 		bodies.set([...$bodies]); // Trigger reactivity
 		draw(); // Redraw
-		// center on selected body (snap exactly, no lerp) to avoid drift at high speeds
+		// center camera on selected body (snap in world-space)
 		if ($selectedBody) {
-			offsetX = -scale * $selectedBody.x;
-			offsetY = -scale * $selectedBody.y;
+			cameraX = $selectedBody.x;
+			cameraY = $selectedBody.y;
 		}
 
 		animationId = requestAnimationFrame(animate);
@@ -100,8 +101,9 @@
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		ctx.save();
-		ctx.translate(canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
+		ctx.translate(canvas.width / 2, canvas.height / 2);
 		ctx.scale(scale, scale);
+		ctx.translate(-cameraX, -cameraY);
 
 		$bodies.forEach((body: Body) => {
 			drawTrail(ctx, body, scale); // Nova linha: desenha órbitas/trails
@@ -141,8 +143,10 @@
 		event.preventDefault();
 
 		isDragging = true;
-		startX = event.clientX - offsetX;
-		startY = event.clientY - offsetY;
+		startX = event.clientX;
+		startY = event.clientY;
+		startCamX = cameraX;
+		startCamY = cameraY;
 
 		const rect = canvas.getBoundingClientRect();
 		const clickClientX = event.clientX - rect.left;
@@ -158,8 +162,8 @@
 
 		$bodies.forEach((body) => {
 			// Convert body world coordinates to screen (pixel) coordinates
-			const bodyScreenX = canvas.width / 2 + offsetX + scale * body.x;
-			const bodyScreenY = canvas.height / 2 + offsetY + scale * body.y;
+			const bodyScreenX = canvas.width / 2 + scale * (body.x - cameraX);
+			const bodyScreenY = canvas.height / 2 + scale * (body.y - cameraY);
 
 			const dx = bodyScreenX - clickClientX;
 			const dy = bodyScreenY - clickClientY;
@@ -204,12 +208,19 @@
 		scale *= event.deltaY > 0 ? 1 - zoomSpeed : 1 + zoomSpeed;
 		scale = Math.max(farthestZoom, Math.min(scale, closestZoom)); // limit zoom
 
-		// keep zoom on the cursor
-		const cursorX = event.clientX - canvas.width / 2;
-		const cursorY = event.clientY - canvas.height / 2;
-
-		offsetX = cursorX - (cursorX - offsetX) * (scale / oldScale);
-		offsetY = cursorY - (cursorY - offsetY) * (scale / oldScale);
+		if ($selectedBody) {
+			// Keep selected body centered during zoom
+			cameraX = $selectedBody.x;
+			cameraY = $selectedBody.y;
+		} else {
+			// Preserve world point under cursor when no selection
+			const sx = event.clientX - canvas.width / 2;
+			const sy = event.clientY - canvas.height / 2;
+			const worldX = cameraX + sx / oldScale;
+			const worldY = cameraY + sy / oldScale;
+			cameraX = worldX - sx / scale;
+			cameraY = worldY - sy / scale;
+		}
 
 		draw();
 	}
@@ -221,16 +232,20 @@
 	}
 	// coordinates of the cursor and center
 	function pointermove(event: PointerEvent) {
-		cursorX = (event.clientX - canvas.width / 2 - offsetX) / scale;
-		cursorY = (event.clientY - canvas.height / 2 - offsetY) / scale;
-		centerX = -offsetX / scale;
-		centerY = -offsetY / scale;
+		const sx = event.clientX - canvas.width / 2;
+		const sy = event.clientY - canvas.height / 2;
+		cursorX = cameraX + sx / scale;
+		cursorY = cameraY + sy / scale;
+		centerX = cameraX;
+		centerY = cameraY;
 
 		if (isDragging) {
 			event.preventDefault();
 
-			offsetX = event.clientX - startX;
-			offsetY = event.clientY - startY;
+			const dx = event.clientX - startX;
+			const dy = event.clientY - startY;
+			cameraX = startCamX - dx / scale;
+			cameraY = startCamY - dy / scale;
 		}
 
 		draw();

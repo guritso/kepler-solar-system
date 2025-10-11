@@ -1,7 +1,7 @@
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
 import { computeOrbitPoints } from './trails';
-import { AU_TO_SIM, AU_IN_KM, DAY_TO_SEC } from "./constants";
+import { AU_TO_SIM, AU_IN_KM, DAY_TO_SEC } from './constants';
 import bodiesCsv from '$lib/assets/bodies.csv?raw';
 
 export interface Body {
@@ -16,14 +16,13 @@ export interface Body {
 		one: string;
 		two: string;
 	};
-	trail?: { x: number; y: number }[]; 
+	trail?: { x: number; y: number }[];
 	orbit?: { x: number; y: number }[]; // Static orbit for planets only
 	orbitalElements?: OrbitalElements; // Keplerian elements for analytic update (all)
 	isHyperbolic?: boolean; // Flag: true for small bodies
 	bodyType?: string;
 	orbitalPeriod: number;
 }
-
 
 // Parse CSV data
 interface BodyData {
@@ -42,8 +41,8 @@ interface BodyData {
 function parseCsvData(csvText: string): BodyData[] {
 	const lines = csvText.trim().split('\n');
 	const headers = lines[0].split(',');
-	
-	return lines.slice(1).map(line => {
+
+	return lines.slice(1).map((line) => {
 		const values = line.split(',');
 		return {
 			name: values[0],
@@ -142,56 +141,56 @@ const bodyGradients: Record<string, { one: string; two: string }> = {
 	saturn: { one: 'rgb(250, 200, 100)', two: 'rgb(200, 150, 50)' },
 	uranus: { one: 'rgb(100, 200, 255)', two: 'rgb(50, 100, 150)' },
 	neptune: { one: 'rgb(50, 100, 255)', two: 'rgb(0, 50, 150)' },
-	ceres: { one: 'rgb(200,200,200)', two: 'rgb(160,160,160)' },
-	pluto: { one: 'rgb(200,200,200)', two: 'rgb(68, 35, 30)' },
-	sedna: { one: 'rgb(201, 201, 235)', two: 'rgba(100, 100, 139, 0.6)' },
-	atlas: { one: 'rgb(200, 200, 255)', two: 'rgba(100, 100, 200, 0.6)' }
+	pluto: { one: 'rgb(200,200,200)', two: 'rgb(68, 35, 30)' }
 };
-  
+
 function classifyBody(body: BodyData): string {
 	const { sma, ecc, radius, mass } = body;
 	const perihelion = sma * (1 - ecc); // AU
-	
+
 	if (ecc > 0.8 && perihelion < 5) return 'Comet';
 	if (radius < 400 || mass < 1e20) return 'Asteroid';
 	if (mass < 1e25 && radius > 400 && radius < 2000) return 'Dwarf Planet';
 
 	// Planet: otherwise, assuming major bodies
 	return 'Planet';
-  }
+}
 
 function calculateOrbitalPeriod(sma: number, eccentricity: number): number {
-    // Only works for elliptical orbits (e < 1)
-    if (eccentricity >= 1) return 0; // Órbita de escape
-    
-    // 3rd Law of Kepler: T² = a³ (for AU and years)
-    // So: T = √(a³)
-    const periodYears = Math.sqrt(sma * sma * sma);
-    return periodYears;
+	// Only works for elliptical orbits (e < 1)
+	if (eccentricity >= 1) return 0; // Órbita de escape
+
+	// 3rd Law of Kepler: T² = a³ (for AU and years)
+	// So: T = √(a³)
+	const periodYears = Math.sqrt(sma * sma * sma);
+	return periodYears;
 }
 
 // Small bodies that should have trails instead of static orbits
 function shouldUseTrail(eccentricity: number): boolean {
-    return eccentricity >= 1.0;
+	return eccentricity >= 1.0;
 }
 
 // Create fresh bodies array (for initial and reset)
 export function createBodies(): Body[] {
 	const bodies: Body[] = [sun]; // Start with the sun
-	
+
 	// Create bodies from CSV data (skip Sun as it's already created)
 	for (const data of bodiesData) {
 		// Skip Sun - it's already created above
 		if (data.name.toLowerCase() === 'sun') continue;
-		
+
 		const elements = csvToOrbitalElements(data);
-		const gradient = bodyGradients[data.name.toLowerCase()] || { one: 'rgb(200,200,200)', two: 'rgb(160,160,160)' };
-		
+		const gradient = bodyGradients[data.name.toLowerCase()] || {
+			one: 'rgb(200,200,200)',
+			two: 'rgb(160,160,160)'
+		};
+
 		const body = fromOrbital(data.name, elements, data.mass, data.radius, gradient);
-		
+
 		// Set orbital elements for all bodies
 		body.orbitalElements = elements;
-		
+
 		// For planets: static orbit, for small bodies: dynamic trail
 		if (shouldUseTrail(data.ecc)) {
 			body.isHyperbolic = true;
@@ -201,7 +200,7 @@ export function createBodies(): Body[] {
 		}
 
 		body.bodyType = classifyBody(data);
-		
+
 		bodies.push(body);
 	}
 

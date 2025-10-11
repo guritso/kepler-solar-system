@@ -2,7 +2,7 @@
 import { keplerToCartesian } from './kepler';
 import type { Body } from './bodies';
 import { updateDynamicTrail } from './trails';
-import { AU_TO_SIM, DAY_TO_SEC } from "./constants";
+import { AU_TO_SIM, DAY_TO_SEC } from './constants';
 // const GM_sun = 3.94e-7; // No longer needed for numeric integration
 
 /**

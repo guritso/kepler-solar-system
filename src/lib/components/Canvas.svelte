@@ -112,15 +112,15 @@
 		$bodies.forEach((body: Body) => {
 			if ($showOrbits) {
 				if (!$showDwarf && body.bodyType === 'Dwarf Planet') return;
-				if (!$showComets && body.bodyType === 'Comet') return;
+				if (!$showComets && body.bodyType === 'Comet' && body.isHyperbolic !== true) return;
 				if (!$showAsteroids && body.bodyType === 'Asteroid') return;
-				drawTrail(ctx, body, scale); // Nova linha: desenha órbitas/trails
+				drawTrail(ctx, body, scale);
 			}
 		});
 
 		$bodies.forEach((body: Body) => {
 			if (!$showDwarf && body.bodyType === 'Dwarf Planet') return;
-			if (!$showComets && body.bodyType === 'Comet') return;
+			if (!$showComets && body.bodyType === 'Comet' && body.isHyperbolic !== true) return;
 			if (!$showAsteroids && body.bodyType === 'Asteroid') return;
 			ctx.save(); // Save state for per-body transform
 
@@ -197,7 +197,7 @@
 		});
 
 		selectedBody.set(closest);
-	    console.log('clicked', closest);
+		console.log('clicked', closest);
 	}
 
 	function pointerup() {

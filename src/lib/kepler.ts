@@ -27,7 +27,8 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 
 	// --- epoch units: accept either Unix ms or Julian Date (JD) ---
 	let epochMs = elements.epoch;
-	if (Math.abs(epochMs) < 1e11) { // provável JD
+	if (Math.abs(epochMs) < 1e11) {
+		// provável JD
 		epochMs = (epochMs - 2440587.5) * 86400000;
 	}
 	const tDays = (now - epochMs) / 86400000; // dias desde epoch
@@ -43,12 +44,12 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	// mean motion (usar abs(a)^3)
 	const n = Math.sqrt(mu / Math.abs(a * a * a));
 
-    // Mean anomaly at time now (rad)
-    let M = toRad(elements.M) + n * tDays;
+	// Mean anomaly at time now (rad)
+	let M = toRad(elements.M) + n * tDays;
 	// For elliptical orbits, M is periodic (normalize). For hyperbolic orbits (e>1), do not normalize!
-    if (e < 1) {
-        M = ((M + Math.PI) % (2 * Math.PI)) - Math.PI;
-    }
+	if (e < 1) {
+		M = ((M + Math.PI) % (2 * Math.PI)) - Math.PI;
+	}
 
 	if (Math.abs(e - 1) < 1e-12) {
 		throw new Error('Parabolic orbits (e ~= 1) não suportadas.');
@@ -61,16 +62,16 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	if (e < 1) {
 		// Eccentric anomaly E for ellipse
 		// Better initial guess for highly eccentric orbits
-		let E = (Math.abs(e) < 0.8) ? M : Math.PI;
+		let E = Math.abs(e) < 0.8 ? M : Math.PI;
 		if (e > 0.9) {
 			// For very eccentric orbits, use a better initial guess
-			E = M + e * Math.sin(M) / (1 - e * Math.cos(M));
+			E = M + (e * Math.sin(M)) / (1 - e * Math.cos(M));
 		}
-		
+
 		// Increase iterations and tolerance for highly eccentric orbits
 		const maxIter = e > 0.9 ? 500 : 200;
 		const tolerance = e > 0.9 ? 1e-12 : 1e-14;
-		
+
 		for (let i = 0; i < maxIter; i++) {
 			const f = E - e * Math.sin(E) - M;
 			const fp = 1 - e * Math.cos(E);
@@ -90,7 +91,7 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 		// M = e*sinh(H) - H
 		// initial guess
 		let H = Math.asinh(M / e);
-		if (!isFinite(H)) H = Math.sign(M) * Math.log(2 * Math.abs(M) / e + 1.8);
+		if (!isFinite(H)) H = Math.sign(M) * Math.log((2 * Math.abs(M)) / e + 1.8);
 		for (let i = 0; i < 300; i++) {
 			const sinhH = Math.sinh(H);
 			const coshH = Math.cosh(H);
@@ -126,9 +127,12 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	const inc = toRad(elements.i);
 	const omega = toRad(elements.ω);
 
-	const cosO = Math.cos(Omega), sinO = Math.sin(Omega);
-	const cosi = Math.cos(inc), sini = Math.sin(inc);
-	const cosw = Math.cos(omega), sinw = Math.sin(omega);
+	const cosO = Math.cos(Omega),
+		sinO = Math.sin(Omega);
+	const cosi = Math.cos(inc),
+		sini = Math.sin(inc);
+	const cosw = Math.cos(omega),
+		sinw = Math.sin(omega);
 
 	const R11 = cosO * cosw - sinO * sinw * cosi;
 	const R12 = -cosO * sinw - sinO * cosw * cosi;

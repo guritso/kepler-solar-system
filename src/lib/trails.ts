@@ -16,7 +16,7 @@ export function computeOrbitPoints(elements: OrbitalElements): { x: number; y: n
 	const basePoints = 360;
 	const sizeFactor = Math.max(1, elements.a / 5); // Scale by semi-major axis (e.g., Jupiter=5AU -> 1x, Pluto=39AU -> ~8x)
 	const eccFactor = Math.max(1, elements.e * 10); // Extra points for eccentricity (tight curves)
-	
+
 	const adaptivePoints = Math.min(basePoints * sizeFactor * eccFactor, 5000); // Cap at 5000 for perf
 
 	const points: { x: number; y: number }[] = [];
@@ -27,11 +27,11 @@ export function computeOrbitPoints(elements: OrbitalElements): { x: number; y: n
 		// For highly eccentric orbits (e > 0.9), use more points and better sampling
 		const isHighlyEccentric = e > 0.9;
 		const finalPoints = isHighlyEccentric ? Math.max(adaptivePoints, 2000) : adaptivePoints;
-		
+
 		// Special case for very large orbits like Sedna - use fewer points to avoid precision issues
 		const isVeryLarge = elements.a > 200;
 		const actualPoints = isVeryLarge ? Math.min(finalPoints, 1000) : finalPoints;
-		
+
 		for (let i = 0; i < actualPoints; i++) {
 			const M_deg = (i / actualPoints) * 360;
 			const tempElements = { ...elements, M: M_deg };

@@ -1,5 +1,16 @@
 <script lang="ts">
-	import { Play, Pause, FastForward, Rewind, TimerReset, Tag, Orbit, CircleSmall, Torus, Bubbles } from 'lucide-svelte';
+	import {
+		Play,
+		Pause,
+		FastForward,
+		Rewind,
+		TimerReset,
+		Tag,
+		Orbit,
+		CircleSmall,
+		Torus,
+		Bubbles
+	} from 'lucide-svelte';
 	import {
 		timeScale,
 		showTag,
@@ -80,15 +91,15 @@
 	</div>
 	<div class="flex gap-2 items-center">
 		<button
-		aria-label="Pause"
-		title="Pause"
+			aria-label="Pause"
+			title="Pause"
 			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
 			onclick={togglePause}
-			>
+		>
 			{#if $timeScale === 0}
-			<Play />
+				<Play />
 			{:else}
-			<Pause />
+				<Pause />
 			{/if}
 		</button>
 		<button
@@ -97,7 +108,7 @@
 			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
 			onclick={decelerate}
 		>
-		<Rewind />
+			<Rewind />
 		</button>
 		<button
 			aria-label="Accelerate"
@@ -108,72 +119,72 @@
 			<FastForward />
 		</button>
 		<button
-		aria-label="Reset simulation"
-		title="Reset simulation"
-		class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
-		onclick={resetSimulation}
+			aria-label="Reset simulation"
+			title="Reset simulation"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={resetSimulation}
 		>
 			<TimerReset />
 		</button>
 		<button
-		aria-label="Show tag"
-		title="Show tag"
-		class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
-		onclick={showtag}
+			aria-label="Show tag"
+			title="Show tag"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={showtag}
 		>
-		{#if $showTag}
-		<Tag color="white" />
-		{:else}
-		<Tag color="gray" />
-		{/if}
-	</button>
-	<button
-		aria-label="Show orbits"
-		title="Show orbits"
-		class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
-		onclick={showorbits}
-	>
-		{#if $showOrbits}
-			<Orbit color="white" />
-		{:else}
-			<Orbit color="gray" />
-		{/if}
-	</button>
-	<button
-	aria-label="Show dwarf Planets"
-	title="Show dwarf planets"
-	class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
-	onclick={showdwarf}
->
-	{#if $showDwarf}
-		<CircleSmall color="white" />
-	{:else}
-		<CircleSmall color="gray" />
-	{/if}
-</button>
-<button
-aria-label="Show comets"
-title="Show comets"
-class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
-onclick={showcomets}
->
-	{#if $showComets}
-		<Torus color="white" />
-	{:else}
-		<Torus color="gray" />
-	{/if}
-</button>
-<button
-aria-label="Show asteroids"
-title="Show asteroids"
-class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
-onclick={showasteroids}
->
-	{#if $showAsteroids}
-		<Bubbles color="white" />
-	{:else}
-		<Bubbles color="gray" />
-	{/if}
-</button>
-</div>
+			{#if $showTag}
+				<Tag color="white" />
+			{:else}
+				<Tag color="gray" />
+			{/if}
+		</button>
+		<button
+			aria-label="Show orbits"
+			title="Show orbits"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={showorbits}
+		>
+			{#if $showOrbits}
+				<Orbit color="white" />
+			{:else}
+				<Orbit color="gray" />
+			{/if}
+		</button>
+		<button
+			aria-label="Show dwarf Planets"
+			title="Show dwarf planets"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={showdwarf}
+		>
+			{#if $showDwarf}
+				<CircleSmall color="white" />
+			{:else}
+				<CircleSmall color="gray" />
+			{/if}
+		</button>
+		<button
+			aria-label="Show comets"
+			title="Show comets"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={showcomets}
+		>
+			{#if $showComets}
+				<Torus color="white" />
+			{:else}
+				<Torus color="gray" />
+			{/if}
+		</button>
+		<button
+			aria-label="Show asteroids"
+			title="Show asteroids"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={showasteroids}
+		>
+			{#if $showAsteroids}
+				<Bubbles color="white" />
+			{:else}
+				<Bubbles color="gray" />
+			{/if}
+		</button>
+	</div>
 </div>

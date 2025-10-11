@@ -28,10 +28,10 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	// --- epoch units: accept either Unix ms or Julian Date (JD) ---
 	let epochMs = elements.epoch;
 	if (Math.abs(epochMs) < 1e11) {
-		// provável JD
+		// probably JD
 		epochMs = (epochMs - 2440587.5) * 86400000;
 	}
-	const tDays = (now - epochMs) / 86400000; // dias desde epoch
+	const tDays = (now - epochMs) / 86400000; // days since epoch
 
 	// orbital params
 	let a = elements.a;
@@ -41,7 +41,7 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	// normalize a for hyperbolic convention if needed
 	if (e > 1 && a > 0) a = -a;
 
-	// mean motion (usar abs(a)^3)
+	// mean motion (use abs(a)^3)
 	const n = Math.sqrt(mu / Math.abs(a * a * a));
 
 	// Mean anomaly at time now (rad)
@@ -52,7 +52,7 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	}
 
 	if (Math.abs(e - 1) < 1e-12) {
-		throw new Error('Parabolic orbits (e ~= 1) não suportadas.');
+		throw new Error('Parabolic orbits (e ~= 1) are not supported.');
 	}
 
 	let nu = 0;
@@ -79,7 +79,7 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 			E -= d;
 			if (Math.abs(d) < tolerance) break;
 		}
-		// corrected: usar sin(E/2), cos(E/2)
+		// corrected: sin(E/2), cos(E/2)
 		const sinE2 = Math.sin(E / 2);
 		const cosE2 = Math.cos(E / 2);
 		nu = 2 * Math.atan2(Math.sqrt(1 + e) * sinE2, Math.sqrt(1 - e) * cosE2);
@@ -105,15 +105,15 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 		const coshH2 = Math.cosh(H / 2);
 		nu = 2 * Math.atan2(Math.sqrt(e + 1) * sinhH2, Math.sqrt(e - 1) * coshH2);
 
-		p = Math.abs(a) * (e * e - 1); // Para órbitas hiperbólicas: p = |a|(e²-1)
+		p = Math.abs(a) * (e * e - 1); // for hyperbolic orbits
 		r = p / (1 + e * Math.cos(nu));
 	}
 
-	// posição no plano orbital
+	// position in orbital plane
 	const x_orb = r * Math.cos(nu);
 	const y_orb = r * Math.sin(nu);
 
-	// velocidade no plano orbital (radial + transverse)
+	// velocity in orbital plane (radial + transverse)
 	if (p <= 0) throw new Error('p (semi-latus rectum) invalid.');
 	const sqrt_mu_over_p = Math.sqrt(mu / p);
 	const vr = sqrt_mu_over_p * e * Math.sin(nu);
@@ -122,7 +122,7 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 	const vx_orb = vr * Math.cos(nu) - vtheta * Math.sin(nu);
 	const vy_orb = vr * Math.sin(nu) + vtheta * Math.cos(nu);
 
-	// rotação PQW -> IJK
+	// rotation PQW -> IJK
 	const Omega = toRad(elements.Ω);
 	const inc = toRad(elements.i);
 	const omega = toRad(elements.ω);

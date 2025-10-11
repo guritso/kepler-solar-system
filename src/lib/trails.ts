@@ -1,7 +1,7 @@
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
 import type { Body } from './bodies';
-import { AU_TO_SIM } from './stores';
+import { AU_TO_SIM } from './constants';
 
 const mu = 0.01720209895 ** 2; // Gravitational constant (GM scaled for your units)
 

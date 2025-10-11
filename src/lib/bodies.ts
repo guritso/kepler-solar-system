@@ -1,7 +1,7 @@
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
 import { computeOrbitPoints } from './trails';
-import { AU_TO_SIM } from "./stores";
+import { AU_TO_SIM, AU_IN_KM, DAY_TO_SEC } from "./constants";
 import bodiesCsv from '$lib/assets/bodies.csv?raw';
 
 export interface Body {
@@ -22,7 +22,6 @@ export interface Body {
 	isSmall?: boolean; // Flag: true for small bodies
 }
 
-const DAY_TO_SEC = 86400;
 
 // Parse CSV data
 interface BodyData {
@@ -144,7 +143,9 @@ const bodyGradients: Record<string, { one: string; two: string }> = {
 };
 
 // Small bodies that should have trails instead of static orbits
-const smallBodies = new Set(['ceres', 'pluto', 'sedna', 'atlas']);
+function shouldUseTrail(eccentricity: number): boolean {
+    return eccentricity >= 1.0;
+}
 
 // Create fresh bodies array (for initial and reset)
 export function createBodies(): Body[] {
@@ -164,7 +165,7 @@ export function createBodies(): Body[] {
 		body.orbitalElements = elements;
 		
 		// For planets: static orbit, for small bodies: dynamic trail
-		if (smallBodies.has(data.name.toLowerCase())) {
+		if (shouldUseTrail(data.ecc)) {
 			body.isSmall = true;
 			body.trail = [];
 		} else {

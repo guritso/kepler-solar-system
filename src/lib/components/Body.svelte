@@ -9,8 +9,7 @@
 	let vyKm = $state(0);
 	let vKm = $state(0);
 
-	const AU_TO_SIM = 2150; // keep in sync with stores.ts
-	const AU_IN_KM = 149597870.7;
+	import { AU_TO_SIM, AU_IN_KM } from '../constants';
 
 	$effect(() => {
 		const body = $bodies.find((body) => body.name === $selectedBody?.name);

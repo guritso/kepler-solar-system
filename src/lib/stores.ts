@@ -1,8 +1,7 @@
 import { writable } from 'svelte/store';
 import { createBodies } from '$lib/bodies';
 import type { Body } from '$lib/bodies';
-
-export const AU_TO_SIM = 2150;
+import { AU_TO_SIM } from './constants';
 
 export const coordinates = writable({ x: 0, y: 0, z: 1, mx: 0, my: 0 });
 export const bodies = writable<Body[]>(createBodies()); // Fresh initial

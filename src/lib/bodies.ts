@@ -1,7 +1,7 @@
 import { keplerToCartesian } from './kepler';
 import type { OrbitalElements } from './kepler';
 import { computeOrbitPoints } from './trails';
-import { AU_TO_SIM, AU_IN_KM, DAY_TO_SEC } from './constants';
+import { AU_TO_SIM, DAY_TO_SEC } from './constants';
 import bodiesCsv from '$lib/assets/bodies.csv?raw';
 
 export interface Body {
@@ -12,6 +12,7 @@ export interface Body {
 	vy: number;
 	mass: number;
 	radius: number;
+	radiusKm: number;
 	gradient: {
 		one: string;
 		two: string;
@@ -40,7 +41,6 @@ interface BodyData {
 
 function parseCsvData(csvText: string): BodyData[] {
 	const lines = csvText.trim().split('\n');
-	const headers = lines[0].split(',');
 
 	return lines.slice(1).map((line) => {
 		const values = line.split(',');
@@ -90,6 +90,7 @@ function fromOrbital(
 	return {
 		name,
 		radius,
+		radiusKm,
 		orbitalPeriod,
 		x,
 		y,
@@ -106,6 +107,7 @@ const radiusScale = AU_TO_SIM / 149597870.7;
 const sun: Body = {
 	name: 'Sun',
 	radius: SUN_RADIUS_KM * radiusScale, // Realistic Sun radius
+	radiusKm: SUN_RADIUS_KM,
 	x: 0,
 	y: 0,
 	vx: 0,
@@ -148,7 +150,7 @@ function classifyBody(body: BodyData): string {
 	const { sma, ecc, radius, mass } = body;
 	const perihelion = sma * (1 - ecc); // AU
 
-	if (ecc > 0.8 && perihelion < 5) return 'Comet';
+	if (ecc > 0.5 && perihelion < 3) return 'Comet';
 	if (radius < 400 || mass < 1e20) return 'Asteroid';
 	if (mass < 1e25 && radius > 400 && radius < 2000) return 'Dwarf Planet';
 

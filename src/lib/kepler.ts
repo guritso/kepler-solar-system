@@ -60,13 +60,23 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 
 	if (e < 1) {
 		// Eccentric anomaly E for ellipse
+		// Better initial guess for highly eccentric orbits
 		let E = (Math.abs(e) < 0.8) ? M : Math.PI;
-		for (let i = 0; i < 200; i++) {
+		if (e > 0.9) {
+			// For very eccentric orbits, use a better initial guess
+			E = M + e * Math.sin(M) / (1 - e * Math.cos(M));
+		}
+		
+		// Increase iterations and tolerance for highly eccentric orbits
+		const maxIter = e > 0.9 ? 500 : 200;
+		const tolerance = e > 0.9 ? 1e-12 : 1e-14;
+		
+		for (let i = 0; i < maxIter; i++) {
 			const f = E - e * Math.sin(E) - M;
 			const fp = 1 - e * Math.cos(E);
 			const d = f / fp;
 			E -= d;
-			if (Math.abs(d) < 1e-14) break;
+			if (Math.abs(d) < tolerance) break;
 		}
 		// corrected: usar sin(E/2), cos(E/2)
 		const sinE2 = Math.sin(E / 2);

@@ -33,8 +33,10 @@
 		<h3>{$selectedBody.name}</h3>
 		<p>Mass: {$selectedBody.mass.toExponential(2)} kg</p>
 		<p>Radius: {$selectedBody.radius.toFixed(2)} m</p>
+		<p>Body Type: {$selectedBody.bodyType}</p>
 		<p>Pos: ({x.toFixed(2)}, {y.toFixed(2)})</p>
 		<p>Vel sim: ({vx.toExponential(2)}, {vy.toExponential(2)})</p>
 		<p>Vel km/s: {vKm.toFixed(3)}</p>
+		<p>Orbital Period: {$selectedBody.orbitalPeriod.toFixed(2)} years</p>
 	</div>
 {/if}

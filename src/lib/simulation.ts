@@ -24,7 +24,7 @@ export function updateBodies(bodies: Body[], actualTime: number, dt: number) {
 			body.vy = (state.vy / DAY_TO_SEC) * AU_TO_SIM;
 
 			// Update dynamic trail only for hyperbolic (e >= 1) small bodies
-			if (body.isSmall && body.orbitalElements.e >= 1 && dt > 0) {
+			if (body.isHyperbolic && body.orbitalElements.e >= 1 && dt > 0) {
 				updateDynamicTrail(body, 1000); // Shorter trail for fast-moving comets
 			}
 		}

@@ -1,6 +1,16 @@
 <script lang="ts">
-	import { Play, Pause, FastForward, Rewind, TimerReset, Tag } from 'lucide-svelte';
-	import { timeScale, showTag, simulationTime, resetTime, resetBodies } from '$lib/stores';
+	import { Play, Pause, FastForward, Rewind, TimerReset, Tag, Orbit, CircleSmall, Torus, Bubbles } from 'lucide-svelte';
+	import {
+		timeScale,
+		showTag,
+		simulationTime,
+		resetTime,
+		resetBodies,
+		showOrbits,
+		showDwarf,
+		showComets,
+		showAsteroids
+	} from '$lib/stores';
 
 	function togglePause() {
 		$timeScale = $timeScale === 0 ? 1 : 0;
@@ -47,6 +57,18 @@
 	let acceleration = $derived(
 		$timeScale === 0 ? 'Paused' : $timeScale > 0 ? `${$timeScale}x` : `-${Math.abs($timeScale)}x`
 	);
+	function showorbits() {
+		$showOrbits = !$showOrbits;
+	}
+	function showdwarf() {
+		$showDwarf = !$showDwarf;
+	}
+	function showcomets() {
+		$showComets = !$showComets;
+	}
+	function showasteroids() {
+		$showAsteroids = !$showAsteroids;
+	}
 </script>
 
 <div
@@ -57,28 +79,101 @@
 		<span>Speed: {acceleration}</span>
 	</div>
 	<div class="flex gap-2 items-center">
-		<button class="bg-gray-800/50 p-2 rounded-lg cursor-pointer" onclick={togglePause}>
+		<button
+		aria-label="Pause"
+		title="Pause"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={togglePause}
+			>
 			{#if $timeScale === 0}
-				<Play />
+			<Play />
 			{:else}
-				<Pause />
+			<Pause />
 			{/if}
 		</button>
-		<button class="bg-gray-800/50 p-2 rounded-lg cursor-pointer" onclick={decelerate}>
-			<Rewind />
+		<button
+			aria-label="Decelerate"
+			title="Decelerate"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={decelerate}
+		>
+		<Rewind />
 		</button>
-		<button class="bg-gray-800/50 p-2 rounded-lg cursor-pointer" onclick={accelerate}>
+		<button
+			aria-label="Accelerate"
+			title="Accelerate"
+			class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+			onclick={accelerate}
+		>
 			<FastForward />
 		</button>
-		<button class="bg-gray-800/50 p-2 rounded-lg cursor-pointer" onclick={resetSimulation}>
+		<button
+		aria-label="Reset simulation"
+		title="Reset simulation"
+		class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+		onclick={resetSimulation}
+		>
 			<TimerReset />
 		</button>
-		<button class="bg-gray-800/50 p-2 rounded-lg cursor-pointer" onclick={showtag}>
-			{#if $showTag}
-				<Tag color="white" />
-			{:else}
-				<Tag color="gray" />
-			{/if}
-		</button>
-	</div>
+		<button
+		aria-label="Show tag"
+		title="Show tag"
+		class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+		onclick={showtag}
+		>
+		{#if $showTag}
+		<Tag color="white" />
+		{:else}
+		<Tag color="gray" />
+		{/if}
+	</button>
+	<button
+		aria-label="Show orbits"
+		title="Show orbits"
+		class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+		onclick={showorbits}
+	>
+		{#if $showOrbits}
+			<Orbit color="white" />
+		{:else}
+			<Orbit color="gray" />
+		{/if}
+	</button>
+	<button
+	aria-label="Show dwarf Planets"
+	title="Show dwarf planets"
+	class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+	onclick={showdwarf}
+>
+	{#if $showDwarf}
+		<CircleSmall color="white" />
+	{:else}
+		<CircleSmall color="gray" />
+	{/if}
+</button>
+<button
+aria-label="Show comets"
+title="Show comets"
+class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+onclick={showcomets}
+>
+	{#if $showComets}
+		<Torus color="white" />
+	{:else}
+		<Torus color="gray" />
+	{/if}
+</button>
+<button
+aria-label="Show asteroids"
+title="Show asteroids"
+class="bg-gray-800/50 p-2 rounded-lg cursor-pointer"
+onclick={showasteroids}
+>
+	{#if $showAsteroids}
+		<Bubbles color="white" />
+	{:else}
+		<Bubbles color="gray" />
+	{/if}
+</button>
+</div>
 </div>

@@ -19,7 +19,9 @@ export interface Body {
 	trail?: { x: number; y: number }[]; 
 	orbit?: { x: number; y: number }[]; // Static orbit for planets only
 	orbitalElements?: OrbitalElements; // Keplerian elements for analytic update (all)
-	isSmall?: boolean; // Flag: true for small bodies
+	isHyperbolic?: boolean; // Flag: true for small bodies
+	bodyType?: string;
+	orbitalPeriod: number;
 }
 
 
@@ -84,9 +86,12 @@ function fromOrbital(
 	const radiusScale = AU_TO_SIM / 149597870.7; // Realistic scale based on AU_TO_SIM
 	const radius = Math.max(radiusKm * radiusScale, 0.01); // Minimum radius for visibility
 
+	const orbitalPeriod = calculateOrbitalPeriod(elements.a, elements.e);
+
 	return {
 		name,
 		radius,
+		orbitalPeriod,
 		x,
 		y,
 		vx,
@@ -110,7 +115,8 @@ const sun: Body = {
 	gradient: {
 		one: 'rgb(255, 253, 131)',
 		two: 'rgb(255, 217, 0)'
-	}
+	},
+	orbitalPeriod: 0
 };
 
 // Convert CSV data to orbital elements
@@ -141,6 +147,28 @@ const bodyGradients: Record<string, { one: string; two: string }> = {
 	sedna: { one: 'rgb(201, 201, 235)', two: 'rgba(100, 100, 139, 0.6)' },
 	atlas: { one: 'rgb(200, 200, 255)', two: 'rgba(100, 100, 200, 0.6)' }
 };
+  
+function classifyBody(body: BodyData): string {
+	const { sma, ecc, radius, mass } = body;
+	const perihelion = sma * (1 - ecc); // AU
+	
+	if (ecc > 0.8 && perihelion < 5) return 'Comet';
+	if (radius < 400 || mass < 1e20) return 'Asteroid';
+	if (mass < 1e25 && radius > 400 && radius < 2000) return 'Dwarf Planet';
+
+	// Planet: otherwise, assuming major bodies
+	return 'Planet';
+  }
+
+function calculateOrbitalPeriod(sma: number, eccentricity: number): number {
+    // Only works for elliptical orbits (e < 1)
+    if (eccentricity >= 1) return 0; // Órbita de escape
+    
+    // 3rd Law of Kepler: T² = a³ (for AU and years)
+    // So: T = √(a³)
+    const periodYears = Math.sqrt(sma * sma * sma);
+    return periodYears;
+}
 
 // Small bodies that should have trails instead of static orbits
 function shouldUseTrail(eccentricity: number): boolean {
@@ -166,14 +194,16 @@ export function createBodies(): Body[] {
 		
 		// For planets: static orbit, for small bodies: dynamic trail
 		if (shouldUseTrail(data.ecc)) {
-			body.isSmall = true;
+			body.isHyperbolic = true;
 			body.trail = [];
 		} else {
 			body.orbit = computeOrbitPoints(elements);
 		}
+
+		body.bodyType = classifyBody(data);
 		
 		bodies.push(body);
 	}
-	
+
 	return bodies;
 }

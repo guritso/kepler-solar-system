@@ -6,7 +6,11 @@
 		timeScale,
 		showTag,
 		selectedBody,
-		resetTime
+		resetTime,
+		showOrbits,
+		showDwarf,
+		showComets,
+		showAsteroids
 	} from '$lib/stores';
 	import { updateBodies } from '$lib/simulation';
 	import type { Body } from '$lib/bodies';
@@ -106,10 +110,18 @@
 		ctx.translate(-cameraX, -cameraY);
 
 		$bodies.forEach((body: Body) => {
-			drawTrail(ctx, body, scale); // Nova linha: desenha órbitas/trails
+			if ($showOrbits) {
+				if (!$showDwarf && body.bodyType === 'Dwarf Planet') return;
+				if (!$showComets && body.bodyType === 'Comet') return;
+				if (!$showAsteroids && body.bodyType === 'Asteroid') return;
+				drawTrail(ctx, body, scale); // Nova linha: desenha órbitas/trails
+			}
 		});
 
 		$bodies.forEach((body: Body) => {
+			if (!$showDwarf && body.bodyType === 'Dwarf Planet') return;
+			if (!$showComets && body.bodyType === 'Comet') return;
+			if (!$showAsteroids && body.bodyType === 'Asteroid') return;
 			ctx.save(); // Save state for per-body transform
 
 			// Translate to body's world position (no rounding to avoid stepping jitter)
@@ -185,7 +197,7 @@
 		});
 
 		selectedBody.set(closest);
-		// console.debug('clicked', closest?.name, closest, { scale, offsetX, offsetY });
+	    console.log('clicked', closest);
 	}
 
 	function pointerup() {

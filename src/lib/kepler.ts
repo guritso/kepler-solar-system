@@ -94,7 +94,7 @@ export function keplerToCartesian(elements: OrbitalElements, now: number): Carte
 		const coshH2 = Math.cosh(H / 2);
 		nu = 2 * Math.atan2(Math.sqrt(e + 1) * sinhH2, Math.sqrt(e - 1) * coshH2);
 
-		p = a * (1 - e * e); // com a negativo e e>1 produz p>0
+		p = Math.abs(a) * (e * e - 1); // Para órbitas hiperbólicas: p = |a|(e²-1)
 		r = p / (1 + e * Math.cos(nu));
 	}
 

@@ -83,13 +83,13 @@
 </script>
 
 <div
-	class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800/70 rounded-lg text-white flex flex-col gap-2 items-center p-4"
+	class="absolute md:bottom-4 bottom-0 bg-gray-800/70 md:rounded-lg text-white flex flex-col gap-2 items-center md:p-4 p-2"
 >
-	<div class="flex gap-2 items-center mb-2">
+	<div class="flex gap-2 flex-row items-center mb-2">
 		<span>Time: {formattedTime}</span>
 		<span>Speed: {acceleration}</span>
 	</div>
-	<div class="flex gap-2 items-center">
+	<div class="flex flex-row flex-wrap gap-2 items-center justify-center">
 		<button
 			aria-label="Pause"
 			title="Pause"
